@@ -3,6 +3,7 @@ import torch
 import gc
 from pathlib import Path
 from tqdm import tqdm
+from transformers import GenerationConfig
 from .utils import build_prompt, initialize_model, log_debug, clear_debug_log, log_prompt_and_response, generate_timestamped_filename, ensure_output_directory, get_model_info
 
 def run_inference(config, samples, output_path, verbose=False):
@@ -31,20 +32,46 @@ def run_inference(config, samples, output_path, verbose=False):
         print(f"❌ Error during model initialization: {e}")
         raise
     
-    # Define stop tokens from the tokenizer
+    # Set up generation configuration with proper parameters
     try:
-        end_of_turn_token = "<end_of_turn>"
-        if end_of_turn_token in tokenizer.vocab:
-            end_of_turn_token_id = tokenizer.convert_tokens_to_ids(end_of_turn_token)
-            stop_token_ids = [tokenizer.eos_token_id, end_of_turn_token_id]
+        generation_params = config.get('generation_params', {})
+        
+        # Handle EOS tokens properly - check for Gemma-style models
+        eos_token_ids = [tokenizer.eos_token_id]
+        
+        # For Gemma models, add the end_of_turn token (107) if available
+        model_name = config.get('model_name', '').lower()
+        if 'gemma' in model_name or 'tucan' in model_name or 'bggpt' in model_name:
+            # Gemma models typically use [1, 107] as EOS tokens
+            end_of_turn_token = 107
+            if end_of_turn_token not in eos_token_ids:
+                eos_token_ids.append(end_of_turn_token)
         else:
-            stop_token_ids = [tokenizer.eos_token_id]
+            # For other models, check for <end_of_turn> token
+            end_of_turn_token = "<end_of_turn>"
+            if end_of_turn_token in tokenizer.vocab:
+                end_of_turn_token_id = tokenizer.convert_tokens_to_ids(end_of_turn_token)
+                if end_of_turn_token_id not in eos_token_ids:
+                    eos_token_ids.append(end_of_turn_token_id)
+        
+        # Create generation config with proper parameters
+        generation_config = GenerationConfig(
+            max_new_tokens=generation_params.get('max_new_tokens', 512),
+            temperature=generation_params.get('temperature', 0.1),
+            top_k=generation_params.get('top_k', 25),  # Default top_k for better results
+            top_p=generation_params.get('top_p', 1.0),
+            repetition_penalty=generation_params.get('repetition_penalty', 1.1),
+            do_sample=generation_params.get('do_sample', True),
+            use_cache=generation_params.get('use_cache', True),
+            eos_token_id=eos_token_ids,
+            pad_token_id=tokenizer.eos_token_id,
+        )
 
         if verbose:
-            log_debug(f"Stop token IDs: {stop_token_ids}")
-            log_debug(f"Generation parameters: {config['generation_params']}")
+            log_debug(f"EOS token IDs: {eos_token_ids}")
+            log_debug(f"Generation config: {generation_config}")
     except Exception as e:
-        print(f"❌ Error setting up tokenizer: {e}")
+        print(f"❌ Error setting up generation config: {e}")
         raise
 
     # Get batch size from config, default to 1 for sequential processing
@@ -74,9 +101,7 @@ def run_inference(config, samples, output_path, verbose=False):
                 with torch.no_grad():
                     outputs = model.generate(
                         **inputs,
-                        **config['generation_params'],
-                        eos_token_id=stop_token_ids,
-                        pad_token_id=tokenizer.eos_token_id,
+                        generation_config=generation_config,
                     )
                 
                 response_text = tokenizer.decode(outputs[0][inputs.input_ids.shape[1]:], skip_special_tokens=True).strip()
@@ -111,9 +136,7 @@ def run_inference(config, samples, output_path, verbose=False):
                 with torch.no_grad():
                     outputs = model.generate(
                         **inputs,
-                        **config['generation_params'],
-                        eos_token_id=stop_token_ids,
-                        pad_token_id=tokenizer.eos_token_id,
+                        generation_config=generation_config,
                     )
                 
                 # Decode responses for each sample in the batch

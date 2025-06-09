@@ -83,7 +83,8 @@ def initialize_model(config):
     tokenizer = AutoTokenizer.from_pretrained(
         config['model_name'],
         token=token,
-        trust_remote_code=True
+        trust_remote_code=True,
+        use_default_system_prompt=False,  # Important for Gemma-based models
     )
     
     # Set pad token if not present
@@ -97,17 +98,29 @@ def initialize_model(config):
         'token': token,
         'trust_remote_code': True,
         'device_map': 'auto' if device == 'cuda' else None,
+        'attn_implementation': 'eager',  # Important: eager attention for Gemma models
     }
     
-    # Add dtype if specified
+    # Handle dtype properly - prefer bfloat16 for better performance
     if config.get('dtype'):
         if config['dtype'] == 'auto':
             model_kwargs['torch_dtype'] = 'auto'
+        elif config['dtype'] == 'bfloat16':
+            model_kwargs['torch_dtype'] = torch.bfloat16
+        elif config['dtype'] == 'float16':
+            model_kwargs['torch_dtype'] = torch.float16
         else:
             model_kwargs['torch_dtype'] = getattr(torch, config['dtype'])
     else:
-        # Default to float16 for GPU, float32 for CPU
-        model_kwargs['torch_dtype'] = torch.float16 if device == 'cuda' else torch.float32
+        # Default to bfloat16 for GPU (better for Gemma), float32 for CPU
+        if device == 'cuda' and torch.cuda.is_bf16_supported():
+            model_kwargs['torch_dtype'] = torch.bfloat16
+            print("🔧 Using bfloat16 dtype for optimal performance")
+        elif device == 'cuda':
+            model_kwargs['torch_dtype'] = torch.float16
+            print("🔧 Using float16 dtype")
+        else:
+            model_kwargs['torch_dtype'] = torch.float32
     
     # Add quantization config if specified
     if quantization_config:

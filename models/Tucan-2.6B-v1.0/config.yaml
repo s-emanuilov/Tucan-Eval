@@ -9,7 +9,7 @@ hf_token: "YOUR_HF_TOKEN_HERE" # Optional: For gated/private models
 # --- GPU / Performance Settings ---
 use_gpu: true
 load_in_4bit: true
-dtype: null # Auto-detects the best dtype
+dtype: bfloat16 # Use bfloat16 for optimal performance with Gemma-based models
 batch_size: 4 # Number of samples to process simultaneously (smaller model can handle larger batches)
 
 # --- System Prompt Template ---
@@ -45,11 +45,12 @@ prompt_settings:
 
 
 # --- Model Generation Parameters ---
-# These settings are optimized for function calling tasks
+# These settings are optimized for function calling tasks and match BgGPT recommendations
 generation_params:
   max_new_tokens: 512
   use_cache: true
   do_sample: true
   temperature: 0.1
+  top_k: 25        # Important: top_k for better generation quality
   top_p: 1.0
   repetition_penalty: 1.1
