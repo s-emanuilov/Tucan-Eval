@@ -1,0 +1,381 @@
+[
+    {
+        "evaluation_criteria": {
+            "correct_function": null,
+            "correct_parameters": null,
+            "function_called": null,
+            "response_quality": null
+        },
+        "expected_behavior": {
+            "expected_function": "get_weather",
+            "expected_parameters": {
+                "location": "София"
+            },
+            "should_call_function": true
+        },
+        "functions": [
+            {
+                "description": "Get the current weather forecast for a given location",
+                "name": "get_weather",
+                "parameters": {
+                    "properties": {
+                        "location": {
+                            "description": "Name of city or location",
+                            "type": "string"
+                        }
+                    },
+                    "required": [
+                        "location"
+                    ],
+                    "type": "object"
+                }
+            }
+        ],
+        "scenario_type": "function_call_required",
+        "user_message": "Какво е времето в София сега?"
+    },
+    {
+        "evaluation_criteria": {
+            "correct_function": null,
+            "correct_parameters": null,
+            "function_called": null,
+            "response_quality": null
+        },
+        "expected_behavior": {
+            "expected_function": "get_weather",
+            "expected_parameters": {
+                "location": "Варна"
+            },
+            "should_call_function": true
+        },
+        "functions": [
+            {
+                "description": "Get the current weather forecast for a given location",
+                "name": "get_weather",
+                "parameters": {
+                    "properties": {
+                        "location": {
+                            "description": "Name of city or location",
+                            "type": "string"
+                        }
+                    },
+                    "required": [
+                        "location"
+                    ],
+                    "type": "object"
+                }
+            },
+            {
+                "description": "Book a hotel room",
+                "name": "book_hotel",
+                "parameters": {
+                    "properties": {
+                        "city": {
+                            "description": "Name of city",
+                            "type": "string"
+                        },
+                        "dates": {
+                            "description": "Dates of stay",
+                            "type": "string"
+                        }
+                    },
+                    "required": [
+                        "city",
+                        "dates"
+                    ],
+                    "type": "object"
+                }
+            }
+        ],
+        "scenario_type": "multiple_functions_selection",
+        "user_message": "Каква е температурата във Варна днес?"
+    },
+    {
+        "evaluation_criteria": {
+            "function_called": null,
+            "no_function_call": null,
+            "response_quality": null,
+            "text_response_provided": null
+        },
+        "expected_behavior": {
+            "expected_response_type": "text_only",
+            "should_call_function": false,
+            "should_contain_answer": true
+        },
+        "functions": [
+            {
+                "description": "Get the current weather forecast for a given location",
+                "name": "get_weather",
+                "parameters": {
+                    "properties": {
+                        "location": {
+                            "description": "Name of city or location",
+                            "type": "string"
+                        }
+                    },
+                    "required": [
+                        "location"
+                    ],
+                    "type": "object"
+                }
+            }
+        ],
+        "scenario_type": "irrelevant_question_with_functions",
+        "user_message": "Коя е столицата на Италия?"
+    },
+    {
+        "evaluation_criteria": {
+            "function_called": null,
+            "no_function_call": null,
+            "response_quality": null,
+            "text_response_provided": null
+        },
+        "expected_behavior": {
+            "expected_response_type": "text_only",
+            "should_call_function": false,
+            "should_provide_helpful_answer": true
+        },
+        "functions": [],
+        "scenario_type": "no_functions_available",
+        "user_message": "Как се приготвя домашна лимонада?"
+    },
+    {
+        "evaluation_criteria": {
+            "correct_function": null,
+            "correct_parameters": null,
+            "function_called": null,
+            "response_quality": null
+        },
+        "expected_behavior": {
+            "expected_function": "search_restaurants",
+            "expected_parameters": {
+                "cuisine": "Chinese",
+                "location": "Stara Zagora"
+            },
+            "should_call_function": true
+        },
+        "functions": [
+            {
+                "description": "Search for restaurants in a specific area",
+                "name": "search_restaurants",
+                "parameters": {
+                    "properties": {
+                        "cuisine": {
+                            "description": "Type of cuisine or food style (in english)",
+                            "type": "string"
+                        },
+                        "location": {
+                            "description": "City or region to search in (in english)",
+                            "type": "string"
+                        }
+                    },
+                    "required": [
+                        "location"
+                    ],
+                    "type": "object"
+                }
+            },
+            {
+                "description": "Make a reservation at a restaurant",
+                "name": "book_restaurant",
+                "parameters": {
+                    "properties": {
+                        "guests": {
+                            "description": "Number of guests for the reservation",
+                            "type": "number"
+                        },
+                        "restaurant_name": {
+                            "description": "Name of the restaurant",
+                            "type": "string"
+                        },
+                        "time": {
+                            "description": "Time for the reservation",
+                            "type": "string"
+                        }
+                    },
+                    "required": [
+                        "restaurant_name",
+                        "time",
+                        "guests"
+                    ],
+                    "type": "object"
+                }
+            }
+        ],
+        "scenario_type": "ambiguous_function_selection",
+        "user_message": "Можеш ли да намериш хубав китайски ресторант в Стара Загора? "
+    },
+    {
+        "evaluation_criteria": {
+            "clarification_requested": null,
+            "function_called": null,
+            "missing_params_identified": null,
+            "response_quality": null
+        },
+        "expected_behavior": {
+            "expected_response_type": "text_clarification",
+            "should_ask_for_missing_info": true,
+            "should_call_function": false
+        },
+        "functions": [
+            {
+                "description": "Book a restaurant table",
+                "name": "book_table",
+                "parameters": {
+                    "properties": {
+                        "restaurant_name": {
+                            "description": "Name of the restaurant",
+                            "type": "string"
+                        },
+                        "time": {
+                            "description": "Time for the reservation",
+                            "type": "string"
+                        }
+                    },
+                    "required": [
+                        "restaurant_name",
+                        "time"
+                    ],
+                    "type": "object"
+                }
+            }
+        ],
+        "scenario_type": "missing_required_parameters",
+        "user_message": "Резервирай ми маса за довечера"
+    },
+    {
+        "evaluation_criteria": {
+            "correct_function": null,
+            "correct_parameters": null,
+            "function_called": null,
+            "response_quality": null
+        },
+        "expected_behavior": {
+            "expected_function": "scrape_webpage",
+            "expected_parameters": {
+                "url": "https://example.com"
+            },
+            "should_call_function": true
+        },
+        "functions": [
+            {
+                "description": "Scrape the contents of a webpage given its URL",
+                "name": "scrape_webpage",
+                "parameters": {
+                    "properties": {
+                        "url": {
+                            "description": "The URL of the webpage",
+                            "type": "string"
+                        }
+                    },
+                    "required": [
+                        "url"
+                    ],
+                    "type": "object"
+                }
+            }
+        ],
+        "scenario_type": "function_call_required",
+        "user_message": "Извлечи текстовото съдържание от уеб страницата https://example.com."
+    },
+    {
+        "evaluation_criteria": {
+            "correct_function": null,
+            "correct_parameters": null,
+            "function_called": null,
+            "response_quality": null
+        },
+        "expected_behavior": {
+            "expected_function": "extract_links",
+            "expected_parameters": {
+                "url": "https://news.bg/"
+            },
+            "should_call_function": true
+        },
+        "functions": [
+            {
+                "description": "Scrape the contents of a webpage given its URL",
+                "name": "scrape_webpage",
+                "parameters": {
+                    "properties": {
+                        "url": {
+                            "description": "The URL of the webpage",
+                            "type": "string"
+                        }
+                    },
+                    "required": [
+                        "url"
+                    ],
+                    "type": "object"
+                }
+            },
+            {
+                "description": "Extract all hyperlinks from the given webpage URL",
+                "name": "extract_links",
+                "parameters": {
+                    "properties": {
+                        "url": {
+                            "description": "Webpage URL",
+                            "type": "string"
+                        }
+                    },
+                    "required": [
+                        "url"
+                    ],
+                    "type": "object"
+                }
+            }
+        ],
+        "scenario_type": "multiple_functions_selection",
+        "user_message": "Експортирай ми всички линкове от страницата https://news.bg/"
+    },
+    {
+        "evaluation_criteria": {
+            "function_called": null,
+            "no_function_call": null,
+            "response_quality": null,
+            "text_response_provided": null
+        },
+        "expected_behavior": {
+            "expected_response_type": "text_only",
+            "should_call_function": false,
+            "should_contain_answer": true
+        },
+        "functions": [
+            {
+                "description": "Scrape the contents of a webpage given its URL",
+                "name": "scrape_webpage",
+                "parameters": {
+                    "properties": {
+                        "url": {
+                            "description": "The URL of the webpage",
+                            "type": "string"
+                        }
+                    },
+                    "required": [
+                        "url"
+                    ],
+                    "type": "object"
+                }
+            }
+        ],
+        "scenario_type": "irrelevant_question_with_functions",
+        "user_message": "Коя е столицата на Япония?"
+    },
+    {
+        "evaluation_criteria": {
+            "function_called": null,
+            "no_function_call": null,
+            "response_quality": null,
+            "text_response_provided": null
+        },
+        "expected_behavior": {
+            "expected_response_type": "text_only",
+            "should_call_function": false,
+            "should_provide_helpful_answer": true
+        },
+        "functions": [],
+        "scenario_type": "no_functions_available",
+        "user_message": "Как да изтегля съдържанието на дадена уеб страница ръчно?"
+    }
+]

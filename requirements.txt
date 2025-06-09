@@ -1,0 +1,13 @@
+# Core ML dependencies
+torch>=2.0.0
+transformers>=4.30.0
+accelerate>=0.20.0
+bitsandbytes>=0.41.0
+
+# Unsloth for fast inference (install from git)
+# Run: pip install "unsloth[colab-new] @ git+https://github.com/unslothai/unsloth.git"
+unsloth
+
+# Template and config dependencies
+Jinja2>=3.1.0
+PyYAML>=6.0
