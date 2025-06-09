@@ -2,6 +2,7 @@ import json
 import torch
 import gc
 from pathlib import Path
+from tqdm import tqdm
 from .utils import build_prompt, initialize_model, log_debug, clear_debug_log, log_prompt_and_response, generate_timestamped_filename, ensure_output_directory, get_model_info
 
 def run_inference(config, samples, output_path, verbose=False):
@@ -46,51 +47,110 @@ def run_inference(config, samples, output_path, verbose=False):
         print(f"❌ Error setting up tokenizer: {e}")
         raise
 
+    # Get batch size from config, default to 1 for sequential processing
+    batch_size = config.get('batch_size', 1)
+    if verbose:
+        log_debug(f"Using batch size: {batch_size}")
+
     results = []
     
-    print(f"🚀 Starting inference on {len(samples)} samples...")
-    for i, sample in enumerate(samples):
+    print(f"🚀 Starting inference on {len(samples)} samples with batch size {batch_size}...")
+    
+    # Process samples in batches
+    for batch_start in tqdm(range(0, len(samples), batch_size), desc="Processing batches"):
+        batch_end = min(batch_start + batch_size, len(samples))
+        batch_samples = samples[batch_start:batch_end]
+        
         try:
-            print(f"  - Processing sample {i+1}/{len(samples)}...")
+            if batch_size == 1:
+                # Single sample processing (original behavior)
+                sample = batch_samples[0]
+                sample_idx = batch_start
+                
+                prompt = build_prompt(config, tokenizer, sample['user_message'], sample['functions'])
+                
+                inputs = tokenizer([prompt], return_tensors="pt", padding=True, truncation=True).to(model.device)
+                
+                with torch.no_grad():
+                    outputs = model.generate(
+                        **inputs,
+                        **config['generation_params'],
+                        eos_token_id=stop_token_ids,
+                        pad_token_id=tokenizer.eos_token_id,
+                    )
+                
+                response_text = tokenizer.decode(outputs[0][inputs.input_ids.shape[1]:], skip_special_tokens=True).strip()
+                
+                # Log to debug file if verbose mode is enabled
+                if verbose:
+                    log_prompt_and_response(
+                        sample_idx=sample_idx,
+                        user_message=sample['user_message'],
+                        functions=sample['functions'],
+                        prompt=prompt,
+                        response=response_text
+                    )
+                
+                results.append({
+                    "scenario_type": sample.get("scenario_type"),
+                    "user_message": sample["user_message"],
+                    "functions": sample["functions"],
+                    "expected_behavior": sample["expected_behavior"],
+                    "model_response": response_text
+                })
             
-            prompt = build_prompt(config, tokenizer, sample['user_message'], sample['functions'])
-            
-            inputs = tokenizer([prompt], return_tensors="pt").to(model.device)
-            
-            with torch.no_grad():
-                outputs = model.generate(
-                    **inputs,
-                    **config['generation_params'],
-                    eos_token_id=stop_token_ids,
-                    pad_token_id=tokenizer.eos_token_id,
-                )
-            
-            response_text = tokenizer.decode(outputs[0][inputs.input_ids.shape[1]:], skip_special_tokens=True).strip()
-            
-            # Log to debug file if verbose mode is enabled
-            if verbose:
-                log_prompt_and_response(
-                    sample_idx=i,
-                    user_message=sample['user_message'],
-                    functions=sample['functions'],
-                    prompt=prompt,
-                    response=response_text
-                )
-            
-            results.append({
-                "scenario_type": sample.get("scenario_type"),
-                "user_message": sample["user_message"],
-                "functions": sample["functions"],
-                "expected_behavior": sample["expected_behavior"],
-                "model_response": response_text
-            })
+            else:
+                # Batch processing
+                prompts = []
+                for sample in batch_samples:
+                    prompt = build_prompt(config, tokenizer, sample['user_message'], sample['functions'])
+                    prompts.append(prompt)
+                
+                inputs = tokenizer(prompts, return_tensors="pt", padding=True, truncation=True).to(model.device)
+                
+                with torch.no_grad():
+                    outputs = model.generate(
+                        **inputs,
+                        **config['generation_params'],
+                        eos_token_id=stop_token_ids,
+                        pad_token_id=tokenizer.eos_token_id,
+                    )
+                
+                # Decode responses for each sample in the batch
+                for i, (sample, output) in enumerate(zip(batch_samples, outputs)):
+                    sample_idx = batch_start + i
+                    
+                    # Extract only the generated portion (after input)
+                    input_length = inputs.input_ids[i].shape[0]
+                    response_tokens = output[input_length:]
+                    response_text = tokenizer.decode(response_tokens, skip_special_tokens=True).strip()
+                    
+                    # Log to debug file if verbose mode is enabled
+                    if verbose:
+                        log_prompt_and_response(
+                            sample_idx=sample_idx,
+                            user_message=sample['user_message'],
+                            functions=sample['functions'],
+                            prompt=prompts[i],
+                            response=response_text
+                        )
+                    
+                    results.append({
+                        "scenario_type": sample.get("scenario_type"),
+                        "user_message": sample["user_message"],
+                        "functions": sample["functions"],
+                        "expected_behavior": sample["expected_behavior"],
+                        "model_response": response_text
+                    })
 
-            if (i + 1) % 5 == 0:
+            # Memory cleanup every few batches
+            if (batch_end) % (batch_size * 5) == 0:
                 gc.collect()
-                torch.cuda.empty_cache()
+                if torch.cuda.is_available():
+                    torch.cuda.empty_cache()
                 
         except Exception as e:
-            print(f"❌ Error processing sample {i+1}: {e}")
+            print(f"❌ Error processing batch {batch_start//batch_size + 1} (samples {batch_start+1}-{batch_end}): {e}")
             import traceback
             traceback.print_exc()
             raise
@@ -119,7 +179,8 @@ def run_inference(config, samples, output_path, verbose=False):
         "inference_results": results,
         "metadata": {
             "total_samples": len(samples),
-            "successful_samples": len(results)
+            "successful_samples": len(results),
+            "batch_size": batch_size
         }
     }
 

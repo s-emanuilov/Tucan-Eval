@@ -16,7 +16,7 @@ This project was born from the need to reliably test fine-tuned models like the 
 * **🔄 Two-Step Workflow:** A clear and distinct `infer` and `evaluate` process that separates model generation from analysis.
 * **🏷️ Customizable Prompts:** Easily define custom system prompts, tool-call tags (e.g., ````tool_call```` or `<tool_call>`), and prompt headers to match any model's required format.
 * **📊 Detailed Reporting:** Generates a comprehensive JSON report with overall accuracy, per-category breakdowns, and a detailed error analysis.
-* **🚀 High-Performance:** Built using `Unsloth` to enable fast inference, even on large models with 4-bit quantization.
+* **🚀 High-Performance:** Built using standard HuggingFace transformers with support for batch processing and 4-bit quantization for efficient inference.
 
 ## 📦 Installation
 
@@ -27,10 +27,7 @@ Clone the repository and install the required dependencies.
 git clone https://github.com/your-username/tucan.git
 cd tucan
 
-# Install Unsloth (required for fast inference)
-pip install "unsloth[colab-new] @ git+https://github.com/unslothai/unsloth.git"
-
-# Install other dependencies
+# Install dependencies
 pip install -r requirements.txt
 
 # Optional: Install in development mode
@@ -40,7 +37,6 @@ pip install -e .
 ### Alternative Installation (PyPI - Coming Soon)
 ```bash
 pip install tucan-eval
-pip install "unsloth[colab-new] @ git+https://github.com/unslothai/unsloth.git"
 ```
 
 ## 🚀 Usage
@@ -65,6 +61,7 @@ hf_token: "YOUR_HF_TOKEN_HERE" # Optional: For gated/private models
 use_gpu: true
 load_in_4bit: true
 dtype: null # Auto-detects the best dtype
+batch_size: 1 # Number of samples to process simultaneously (default: 1)
 
 # --- System Prompt Template ---
 # The main system prompt for function calling.
@@ -100,6 +97,12 @@ generation_params:
   temperature: 0.1
   top_p: 1.0
   repetition_penalty: 1.1
+
+# --- Batch Processing Settings ---
+# Set batch_size > 1 to process multiple samples simultaneously for faster inference.
+# Higher batch sizes use more GPU memory but can significantly speed up processing.
+# Recommended values: 1-8 depending on your GPU memory and model size.
+batch_size: 4
   ```
 ### Step 2: Prepare Evaluation Data
 Ensure you have a JSON file containing your test scenarios. Each scenario should include the user_message, functions available, and the `expected_behavior`.
@@ -194,6 +197,29 @@ The evaluation output includes:
 Files are automatically timestamped with format: `evaluation_YYYYMMDD_HHMMSS_xxxx.json`.
 
 This will print a detailed summary to the console and save the comprehensive results with model information to the specified location.
+
+## ⚡ Batch Processing
+
+Tucan now supports batch processing to significantly speed up inference, especially on GPU setups. You can control batch processing through the `batch_size` parameter in your configuration:
+
+```yaml
+# --- GPU / Performance Settings ---
+use_gpu: true
+load_in_4bit: true
+batch_size: 4  # Process 4 samples simultaneously
+```
+
+**Batch Size Guidelines:**
+- **`batch_size: 1`** - Sequential processing (original behavior), most memory-efficient
+- **`batch_size: 2-4`** - Good balance for most GPUs with 8-16GB VRAM
+- **`batch_size: 8+`** - For high-end GPUs with 24GB+ VRAM and large datasets
+
+**Benefits:**
+- **Faster Processing:** Batch processing can be 2-4x faster than sequential processing
+- **GPU Utilization:** Better utilizes GPU parallelism capabilities
+- **Memory Efficient:** Automatic memory cleanup between batches
+
+**Note:** Higher batch sizes require more GPU memory. If you encounter out-of-memory errors, reduce the batch size or enable 4-bit quantization.
 
 ## 📈 Output Interpretation
 

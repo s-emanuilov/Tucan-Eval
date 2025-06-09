@@ -4,9 +4,8 @@ transformers>=4.30.0
 accelerate>=0.20.0
 bitsandbytes>=0.41.0
 
-# Unsloth for fast inference (install from git)
-# Run: pip install "unsloth[colab-new] @ git+https://github.com/unslothai/unsloth.git"
-unsloth
+# Progress bar for batch processing
+tqdm>=4.64.0
 
 # Template and config dependencies
 Jinja2>=3.1.0

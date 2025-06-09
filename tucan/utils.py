@@ -6,6 +6,7 @@ import random
 from datetime import datetime
 from pathlib import Path
 from jinja2 import Template
+from transformers import AutoTokenizer, AutoModelForCausalLM, BitsAndBytesConfig
 
 def log_debug(message, log_type="INFO"):
     """
@@ -57,12 +58,7 @@ def log_prompt_and_response(sample_idx, user_message, functions, prompt, respons
     log_debug(f"{separator}\n")
 
 def initialize_model(config):
-    """Initializes and returns the model and tokenizer using Unsloth."""
-    try:
-        from unsloth import FastLanguageModel
-    except ImportError:
-        raise ImportError("Unsloth not found. Please install with: pip install 'unsloth[colab-new] @ git+https://github.com/unslothai/unsloth.git'")
-
+    """Initializes and returns the model and tokenizer using standard HuggingFace transformers."""
     print(f"🔧 Initializing model: {config['model_name']}")
     device = "cuda" if config.get('use_gpu', False) and torch.cuda.is_available() else "cpu"
     print(f"💻 Using device: {device.upper()}")
@@ -71,13 +67,58 @@ def initialize_model(config):
     if not token or token == "YOUR_HF_TOKEN_HERE":
         token = None
 
-    model, tokenizer = FastLanguageModel.from_pretrained(
-        model_name=config['model_name'],
-        dtype=config.get('dtype'),
-        load_in_4bit=config.get('load_in_4bit', True),
+    # Set up quantization config if needed
+    quantization_config = None
+    if config.get('load_in_4bit', False):
+        quantization_config = BitsAndBytesConfig(
+            load_in_4bit=True,
+            bnb_4bit_compute_dtype=torch.float16,
+            bnb_4bit_use_double_quant=True,
+            bnb_4bit_quant_type="nf4"
+        )
+        print("🔧 Using 4-bit quantization")
+
+    # Load tokenizer
+    print("📝 Loading tokenizer...")
+    tokenizer = AutoTokenizer.from_pretrained(
+        config['model_name'],
         token=token,
+        trust_remote_code=True
     )
-    # Don't call model.to(device) for 8-bit models - they're already on the correct device
+    
+    # Set pad token if not present
+    if tokenizer.pad_token is None:
+        tokenizer.pad_token = tokenizer.eos_token
+
+    # Load model
+    print("🤖 Loading model...")
+    model_kwargs = {
+        'pretrained_model_name_or_path': config['model_name'],
+        'token': token,
+        'trust_remote_code': True,
+        'device_map': 'auto' if device == 'cuda' else None,
+    }
+    
+    # Add dtype if specified
+    if config.get('dtype'):
+        if config['dtype'] == 'auto':
+            model_kwargs['torch_dtype'] = 'auto'
+        else:
+            model_kwargs['torch_dtype'] = getattr(torch, config['dtype'])
+    else:
+        # Default to float16 for GPU, float32 for CPU
+        model_kwargs['torch_dtype'] = torch.float16 if device == 'cuda' else torch.float32
+    
+    # Add quantization config if specified
+    if quantization_config:
+        model_kwargs['quantization_config'] = quantization_config
+    
+    model = AutoModelForCausalLM.from_pretrained(**model_kwargs)
+    
+    # Move to device if not using device_map
+    if device == 'cpu' or not model_kwargs.get('device_map'):
+        model = model.to(device)
+    
     model.eval()
     print("✅ Model loaded successfully.")
     return model, tokenizer
@@ -192,6 +233,7 @@ def get_model_info(config):
             "use_gpu": config.get("use_gpu", False),
             "load_in_4bit": config.get("load_in_4bit", True),
             "dtype": config.get("dtype"),
+            "batch_size": config.get("batch_size", 1),
             "generation_params": config.get("generation_params", {}),
             "prompt_settings": config.get("prompt_settings", {}),
             "system_prompt_template": config.get("system_prompt_template", "")
