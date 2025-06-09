@@ -22,7 +22,7 @@ system_prompt_template: |
 
   ## Шаблон за извикване: 
   {{ tool_call_start_tag }}
-  {{ "name": <function-name>, "arguments": <args-json-object> }}
+  {{ "name": "<function-name>", "arguments": <args-json-object> }}
   {{ tool_call_end_tag }}
 
 # --- Prompt Formatting Settings ---

@@ -3,7 +3,7 @@
 # -------------------------
 
 # Hugging Face model name or local path
-model_name: "s-emanuilov/BgGPT-2.6B-v1.0"
+model_name: "INSAIT-Institute/BgGPT-Gemma-2-2.6B-IT-v1.0"
 hf_token: "YOUR_HF_TOKEN_HERE" # Optional: For gated/private models
 
 # --- GPU / Performance Settings ---
