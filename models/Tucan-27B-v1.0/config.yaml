@@ -1,0 +1,54 @@
+# -------------------------
+# Tucan Configuration
+# -------------------------
+
+# Hugging Face model name or local path
+model_name: "s-emanuilov/Tucan-27B-v1.0"
+hf_token: "YOUR_HF_TOKEN_HERE" # Optional: For gated/private models
+
+# --- GPU / Performance Settings ---
+use_gpu: true
+load_in_4bit: true
+dtype: null # Auto-detects the best dtype
+
+# --- System Prompt Template ---
+# Complete working system prompt template with proper placeholders
+system_prompt_template: |
+  Ти си полезен AI асистент, който предоставя полезни и точни отговори.
+
+  Имаш достъп и можеш да извикаш една или повече функции, за да помогнеш с потребителското запитване. Използвай ги, само ако е необходимо и подходящо.
+  
+  Когато използваш функция, форматирай извикването ѝ в блок {{ tool_call_start_tag }} на отделен ред, a след това ще получиш резултат от изпълнението в блок {{ tool_call_end_tag }}.
+
+  ## Шаблон за извикване: 
+  {{ tool_call_start_tag }}
+  { "name": "<function-name>", "arguments": <args-json-object> }
+  {{ tool_call_end_tag }}
+
+# --- Prompt Formatting Settings ---
+# This section makes the prompt format fully adaptable.
+prompt_settings:
+  # Defines how a tool call is formatted.
+  # Example for backticks: start_tag: "```tool_call", end_tag: "```"
+  # Example for XML: start_tag: "<tool_call>", end_tag: "</tool_call>"
+  tool_call_format:
+    start_tag: "```tool_call"
+    end_tag: "```"
+    
+  # Headers for different sections of the prompt (can be empty if not needed).
+  text_headers:
+    functions_header: "## Налични функции: "
+    user_query_header: "## Потребителска заявка : "
+  
+  no_functions_prompt_template: "Ти си полезен AI асистент, който предоставя полезни и точни отговори.\n\nПотребител: {{user_query}}"
+
+
+# --- Model Generation Parameters ---
+# These settings are optimized for function calling tasks
+generation_params:
+  max_new_tokens: 512
+  use_cache: true
+  do_sample: true
+  temperature: 0.1
+  top_p: 1.0
+  repetition_penalty: 1.1
