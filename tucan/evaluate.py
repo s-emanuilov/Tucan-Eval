@@ -19,7 +19,9 @@ def _parse_tool_call(response: str, start_tag: str, end_tag: str) -> Optional[Di
         if "arguments" in tool_data:
             tool_data["parameters"] = tool_data.pop("arguments")
         return tool_data
-    except json.JSONDecodeError:
+    except json.JSONDecodeError as e:
+        print(f"❌ JSON parsing error: {e}")
+        print(f"❌ Problematic content: {repr(json_str[:200])}...")
         return {"error": "malformed_json", "content": json_str}
 
 def _compare_parameters(expected_params: Dict, actual_params: Dict) -> bool:
