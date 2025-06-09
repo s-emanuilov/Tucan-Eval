@@ -3,7 +3,7 @@
 # -------------------------
 
 # Hugging Face model name or local path
-model_name: "s-emanuilov/Tucan-2.6B-v1.0"
+model_name: "s-emanuilov/BgGPT-2.6B-v1.0"
 hf_token: "YOUR_HF_TOKEN_HERE" # Optional: For gated/private models
 
 # --- GPU / Performance Settings ---
@@ -38,9 +38,9 @@ prompt_settings:
   # Headers for different sections of the prompt (can be empty if not needed).
   text_headers:
     functions_header: "## Налични функции: "
-    user_query_header: "## Потребителска заявка: "
+    user_query_header: "## Потребителска заявка : "
   
-  no_functions_prompt_template: "Ти си полезен AI асистент, който предоставя полезни и точни отговори.\n\nПотребителска заявка: {{user_query}}"
+  no_functions_prompt_template: "Ти си полезен AI асистент, който предоставя полезни и точни отговори.\n\nПотребител: {{user_query}}"
 
 
 # --- Model Generation Parameters ---

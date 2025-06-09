@@ -45,6 +45,11 @@ pip install "unsloth[colab-new] @ git+https://github.com/unslothai/unsloth.git"
 
 ## 🚀 Usage
 
+Tucan supports loading evaluation data from multiple sources:
+- **Local JSON files** (original functionality) 
+- **HuggingFace datasets** (e.g., `username/dataset-name`)
+- **Individual files from HuggingFace repositories** (e.g., `username/repo-name/file.json`)
+
 The evaluation process is broken into two main steps: **Inference** and **Evaluation**.
 
 ### Step 1: Configuration (`config.yaml`)
@@ -106,20 +111,53 @@ cp examples/config.yaml ./my_config.yaml
 # Edit my_config.yaml to point to your model
 ```
 
-### Step 3: Run Inference
+### Step 3: Explore Available Datasets (Optional)
 
-Use the infer command to run your model against the evaluation samples and save the raw outputs.
+Before running inference, you can explore available datasets and preview their structure:
 
 ```bash
+# List files in a HuggingFace repository
+python -m tucan list-files --repo username/repo-name
+
+# Preview dataset information
+python -m tucan preview --samples username/dataset-name
+python -m tucan preview --samples username/repo-name/file.json
+python -m tucan preview --samples local_file.json
+```
+
+### Step 4: Run Inference
+
+Use the infer command to run your model against evaluation samples from various sources:
+
+```bash
+# From local JSON file (original method)
 python -m tucan infer \
   --config my_config.yaml \
   --samples my_evaluation.json \
   --output inferences.json
+
+# From HuggingFace dataset
+python -m tucan infer \
+  --config my_config.yaml \
+  --samples username/dataset-name \
+  --split test \
+  --output inferences.json
+
+# From specific file in HuggingFace repository
+python -m tucan infer \
+  --config my_config.yaml \
+  --samples username/repo-name/evaluation_data.json \
+  --output inferences.json
 ```
 
-This will create inferences.json, which contains the model's response for each scenario.
+Additional options:
+- `--source-type`: Specify source type (`auto`, `local`, `hf_dataset`, `hf_file`)
+- `--split`: Dataset split for HF datasets (`train`, `test`, `validation`)
+- `--subset`: Dataset subset/configuration for HF datasets
 
-### Step 4: Run Evaluation
+This will create `inferences.json`, which contains the model's response for each scenario.
+
+### Step 5: Run Evaluation
 Use the evaluate command to compare the model's responses with the expected outcomes and generate a final report.
 ```bash
 python -m tucan evaluate \
@@ -147,85 +185,3 @@ This reflects the project's goal of creating models with deeply integrated and "
 ## 📄 License
 
 This project is licensed under the terms of the Apache 2.0 License.
-
-## 🐛 Debug Mode
-
-The Tucan framework now supports verbose debugging to help you inspect model prompts and responses. This is particularly useful when troubleshooting unexpected model outputs or investigating prompt formatting issues.
-
-### Using Verbose Mode
-
-Add the `--verbose` flag to any command to enable detailed logging:
-
-```bash
-# Enable verbose logging during inference
-python -m tucan infer -c models/Tucan-2.6b/config.yaml -s models/Tucan-2.6b/evaluate_samples.json -o results.json --verbose
-
-# Enable verbose logging during evaluation  
-python -m tucan evaluate -c models/Tucan-2.6b/config.yaml -i results.json -o evaluation_report.json --verbose
-```
-
-### Debug Output
-
-When verbose mode is enabled, all debugging information is logged to `debug.log` in the current directory. The log includes:
-
-- **Timestamps** for each operation
-- **Complete prompts** sent to the model (including function definitions and formatting)
-- **Raw model responses** before any post-processing
-- **Function parsing results** during evaluation
-- **Configuration details** like generation parameters and stop tokens
-
-### Example Debug Log Entry
-
-```
-[2024-01-15 14:30:25] [INFO] Starting inference run with verbose logging enabled
-[2024-01-15 14:30:25] [INFO] Processing 10 samples
-[2024-01-15 14:30:26] [INFO] Stop token IDs: [128001, 128009]
-[2024-01-15 14:30:26] [INFO] Generation parameters: {'max_new_tokens': 512, 'temperature': 0.1, ...}
-
-================================================================================
-[2024-01-15 14:30:26] [INFO] SAMPLE 1
-================================================================================
-[2024-01-15 14:30:26] [USER] USER MESSAGE:
-Какво е времето в София сега?
-[2024-01-15 14:30:26] [FUNCTIONS] FUNCTIONS:
-[
-  {
-    "description": "Get the current weather forecast for a given location",
-    "name": "get_weather",
-    "parameters": {
-      "properties": {
-        "location": {
-          "description": "Name of city or location",
-          "type": "string"
-        }
-      },
-      "required": ["location"],
-      "type": "object"
-    }
-  }
-]
-[2024-01-15 14:30:26] [PROMPT] COMPLETE PROMPT:
-<|im_start|>user
-Ти си полезен AI асистент, който предоставя полезни и точни отговори.
-
-Имаш достъп и можеш да извикаш една или повече функции...
-## Налични функции: 
-[...function definitions...]
-
-## Потребителска заявка: 
-Какво е времето в София сега?<|im_end|>
-<|im_start|>assistant
-
-[2024-01-15 14:30:27] [RESPONSE] MODEL RESPONSE:
-```tool_call
-{"name": "get_weather", "arguments": {"location": "София"}}
-```
-
-================================================================================
-```
-
-This detailed logging helps you:
-- **Debug prompt formatting issues** - see exactly what the model receives
-- **Identify response parsing problems** - examine raw model outputs  
-- **Troubleshoot unexpected behavior** - compare expected vs actual responses
-- **Optimize prompts** - understand how different prompts affect model behavior
