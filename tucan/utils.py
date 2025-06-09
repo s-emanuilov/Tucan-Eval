@@ -1,7 +1,10 @@
 import torch
 import json
 import os
+import string
+import random
 from datetime import datetime
+from pathlib import Path
 from jinja2 import Template
 
 def log_debug(message, log_type="INFO"):
@@ -126,3 +129,72 @@ def build_prompt(config, tokenizer, user_query, functions):
     except AttributeError:
         # Fallback for tokenizers without chat template support
         return full_prompt_content
+
+def generate_timestamped_filename(base_name, extension, use_random_suffix=True):
+    """
+    Generates a timestamped filename with optional random suffix.
+    
+    Args:
+        base_name: Base name for the file (e.g., 'inference', 'evaluation')
+        extension: File extension without dot (e.g., 'json')
+        use_random_suffix: Whether to add a 4-character random suffix
+    
+    Returns:
+        Timestamped filename string
+    """
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    
+    if use_random_suffix:
+        # Generate 4 random alphanumeric characters
+        random_suffix = ''.join(random.choices(string.ascii_lowercase + string.digits, k=4))
+        filename = f"{base_name}_{timestamp}_{random_suffix}.{extension}"
+    else:
+        filename = f"{base_name}_{timestamp}.{extension}"
+    
+    return filename
+
+def ensure_output_directory(output_path):
+    """
+    Ensures the output directory exists, creating it if necessary.
+    Returns the absolute path to the output file.
+    
+    Args:
+        output_path: Path to the output file or directory
+    
+    Returns:
+        Absolute path to the output file
+    """
+    output_path = Path(output_path)
+    
+    # If it's a directory or doesn't have an extension, treat as directory
+    if output_path.is_dir() or not output_path.suffix:
+        output_path.mkdir(parents=True, exist_ok=True)
+        return output_path
+    else:
+        # It's a file path, ensure parent directory exists
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        return output_path
+
+def get_model_info(config):
+    """
+    Extracts model information and configuration for inclusion in outputs.
+    
+    Args:
+        config: Configuration dictionary
+    
+    Returns:
+        Dictionary containing model information
+    """
+    model_info = {
+        "model_name": config.get("model_name"),
+        "timestamp": datetime.now().isoformat(),
+        "configuration": {
+            "use_gpu": config.get("use_gpu", False),
+            "load_in_4bit": config.get("load_in_4bit", True),
+            "dtype": config.get("dtype"),
+            "generation_params": config.get("generation_params", {}),
+            "prompt_settings": config.get("prompt_settings", {}),
+            "system_prompt_template": config.get("system_prompt_template", "")
+        }
+    }
+    return model_info

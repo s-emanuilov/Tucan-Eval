@@ -130,51 +130,91 @@ python -m tucan preview --samples local_file.json
 Use the infer command to run your model against evaluation samples from various sources:
 
 ```bash
-# From local JSON file (original method)
+# From local JSON file - saves to current directory with timestamped filename
 python -m tucan infer \
   --config my_config.yaml \
-  --samples my_evaluation.json \
-  --output inferences.json
+  --samples my_evaluation.json
 
-# From HuggingFace dataset
+# From HuggingFace dataset - specify custom output directory
 python -m tucan infer \
   --config my_config.yaml \
   --samples username/dataset-name \
   --split test \
-  --output inferences.json
+  --output ./results
 
-# From specific file in HuggingFace repository
+# From specific file in HuggingFace repository - specify exact output file
 python -m tucan infer \
   --config my_config.yaml \
   --samples username/repo-name/evaluation_data.json \
-  --output inferences.json
+  --output ./results/my_inference.json
 ```
 
 Additional options:
+- `--output`: Output directory or file path (default: current directory with timestamped filename)
 - `--source-type`: Specify source type (`auto`, `local`, `hf_dataset`, `hf_file`)
 - `--split`: Dataset split for HF datasets (`train`, `test`, `validation`)
 - `--subset`: Dataset subset/configuration for HF datasets
 
-This will create `inferences.json`, which contains the model's response for each scenario.
+The inference output includes:
+- **Model information**: Model name, configuration, and timestamp
+- **Inference results**: Model responses for each scenario
+- **Metadata**: Total samples processed and other statistics
+
+Files are automatically timestamped with format: `inference_YYYYMMDD_HHMMSS_xxxx.json` (where `xxxx` is a random 4-character suffix).
 
 ### Step 5: Run Evaluation
 Use the evaluate command to compare the model's responses with the expected outcomes and generate a final report.
+
 ```bash
+# Evaluate with timestamped output in current directory
 python -m tucan evaluate \
   --config my_config.yaml \
-  --inferences inferences.json \
-  --output evaluation_report.json
+  --inferences path/to/inference_file.json
+
+# Evaluate with custom output directory
+python -m tucan evaluate \
+  --config my_config.yaml \
+  --inferences path/to/inference_file.json \
+  --output ./reports
+
+# Evaluate with specific output filename
+python -m tucan evaluate \
+  --config my_config.yaml \
+  --inferences path/to/inference_file.json \
+  --output ./reports/my_evaluation.json
 ```
 
-This will print a detailed summary to the console and save the full results to `evaluation_report.json`.
+The evaluation output includes:
+- **Current model information**: Configuration used for evaluation
+- **Original inference information**: Model info from the inference step
+- **Evaluation summary**: Overall accuracy and performance metrics
+- **Detailed results**: Per-sample analysis and error classification
+- **Evaluation metadata**: Timestamp and processing statistics
+
+Files are automatically timestamped with format: `evaluation_YYYYMMDD_HHMMSS_xxxx.json`.
+
+This will print a detailed summary to the console and save the comprehensive results with model information to the specified location.
 
 ## 📈 Output Interpretation
 
-The framework provides a detailed summary of the model's performance, including:
+The framework provides comprehensive outputs with rich metadata and model information:
 
-* **Overall Accuracy:** The percentage of scenarios the model passed correctly.
-* **Accuracy by Scenario Type:** A breakdown of performance on different types of tasks (e.g., `function_call_required`, `ambiguous_function_selection`, `irrelevant_question_with_functions`).
-* **Error Distribution:** A summary of *why* the model failed, showing counts for errors like `NO_CALL_WHEN_EXPECTED`, `WRONG_PARAMETERS`, and `WRONG_FUNCTION`.
+### Inference Output Structure
+- **model_info**: Model name, configuration parameters, and generation timestamp
+- **inference_results**: List of all model responses with expected behaviors
+- **metadata**: Processing statistics (total samples, successful samples, etc.)
+
+### Evaluation Report Structure
+- **model_info**: Current model configuration used for evaluation
+- **original_inference_info**: Model information from the original inference run
+- **evaluation_summary**: Performance metrics including:
+  * **Overall Accuracy:** Percentage of scenarios the model passed correctly
+  * **Accuracy by Scenario Type:** Performance breakdown by task type (e.g., `function_call_required`, `ambiguous_function_selection`, `irrelevant_question_with_functions`)
+  * **Error Distribution:** Detailed analysis of failure reasons (`NO_CALL_WHEN_EXPECTED`, `WRONG_PARAMETERS`, `WRONG_FUNCTION`, etc.)
+- **detailed_results**: Per-sample analysis with parsed tool calls and error classifications
+- **evaluation_metadata**: Processing statistics and evaluation timestamp
+
+All output files include complete model configuration information, making it easy to reproduce results and track which model settings were used for each evaluation run.
 
 ## 💡 What does TUCAN stand for?
 

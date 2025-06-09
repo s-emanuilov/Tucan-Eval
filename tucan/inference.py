@@ -1,7 +1,8 @@
 import json
 import torch
 import gc
-from .utils import build_prompt, initialize_model, log_debug, clear_debug_log, log_prompt_and_response
+from pathlib import Path
+from .utils import build_prompt, initialize_model, log_debug, clear_debug_log, log_prompt_and_response, generate_timestamped_filename, ensure_output_directory, get_model_info
 
 def run_inference(config, samples, output_path, verbose=False):
     """
@@ -10,8 +11,11 @@ def run_inference(config, samples, output_path, verbose=False):
     Args:
         config: Configuration dictionary
         samples: List of sample dictionaries
-        output_path: Path to save results
+        output_path: Path to save results (can be file or directory)
         verbose: Enable debug logging to debug.log
+    
+    Returns:
+        Path to the created output file
     """
     if verbose:
         clear_debug_log()
@@ -49,13 +53,10 @@ def run_inference(config, samples, output_path, verbose=False):
         try:
             print(f"  - Processing sample {i+1}/{len(samples)}...")
             
-            print(f"    📝 Building prompt...")
             prompt = build_prompt(config, tokenizer, sample['user_message'], sample['functions'])
             
-            print(f"    🔤 Tokenizing...")
             inputs = tokenizer([prompt], return_tensors="pt").to(model.device)
             
-            print(f"    🤖 Generating response...")
             with torch.no_grad():
                 outputs = model.generate(
                     **inputs,
@@ -64,7 +65,6 @@ def run_inference(config, samples, output_path, verbose=False):
                     pad_token_id=tokenizer.eos_token_id,
                 )
             
-            print(f"    📤 Decoding response...")
             response_text = tokenizer.decode(outputs[0][inputs.input_ids.shape[1]:], skip_special_tokens=True).strip()
             
             # Log to debug file if verbose mode is enabled
@@ -98,11 +98,37 @@ def run_inference(config, samples, output_path, verbose=False):
     if verbose:
         log_debug(f"Inference completed. Processed {len(samples)} samples successfully")
 
+    # Handle output path - determine if it's a directory or file
+    output_path = Path(output_path)
+    
+    # If no extension provided or it's an existing directory, treat as directory
+    if not output_path.suffix or output_path.is_dir():
+        output_dir = ensure_output_directory(output_path)
+        filename = generate_timestamped_filename("inference", "json")
+        final_output_path = output_dir / filename
+    else:
+        # It's a specific file path
+        final_output_path = ensure_output_directory(output_path)
+    
+    # Get model information to include in output
+    model_info = get_model_info(config)
+    
+    # Create final output with model info and results
+    final_output = {
+        "model_info": model_info,
+        "inference_results": results,
+        "metadata": {
+            "total_samples": len(samples),
+            "successful_samples": len(results)
+        }
+    }
+
     try:
-        print(f"💾 Saving results to {output_path}...")
-        with open(output_path, 'w', encoding='utf-8') as f:
-            json.dump(results, f, ensure_ascii=False, indent=2)
-        print("✅ Results saved successfully")
+        print(f"💾 Saving results to {final_output_path}...")
+        with open(final_output_path, 'w', encoding='utf-8') as f:
+            json.dump(final_output, f, ensure_ascii=False, indent=2)
+        print(f"✅ Results saved successfully to: {final_output_path.absolute()}")
+        return str(final_output_path.absolute())
     except Exception as e:
         print(f"❌ Error saving results: {e}")
         raise

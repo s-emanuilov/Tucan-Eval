@@ -14,7 +14,7 @@ def main():
     parser_infer = subparsers.add_parser("infer", help="Run model inference on a dataset of samples.")
     parser_infer.add_argument("-c", "--config", type=str, required=True, help="Path to the configuration YAML file.")
     parser_infer.add_argument("-s", "--samples", type=str, required=True, help="Source for evaluation samples. Can be local file, HF dataset, or HF file.")
-    parser_infer.add_argument("-o", "--output", type=str, required=True, help="Path to save the raw inference results.")
+    parser_infer.add_argument("-o", "--output", type=str, default=".", help="Output directory or file path to save inference results (default: current directory).")
     parser_infer.add_argument("--source-type", choices=["auto", "local", "hf_dataset", "hf_file"], default="auto", help="Type of sample source.")
     parser_infer.add_argument("--split", type=str, help="Dataset split to use (for HF datasets).")
     parser_infer.add_argument("--subset", type=str, help="Dataset subset/configuration (for HF datasets).")
@@ -24,7 +24,7 @@ def main():
     parser_eval = subparsers.add_parser("evaluate", help="Evaluate generated inferences against expected outcomes.")
     parser_eval.add_argument("-c", "--config", type=str, required=True, help="Path to the configuration YAML file.")
     parser_eval.add_argument("-i", "--inferences", type=str, required=True, help="Path to the JSON file with inference results.")
-    parser_eval.add_argument("-o", "--output", type=str, required=True, help="Path to save the final evaluation report.")
+    parser_eval.add_argument("-o", "--output", type=str, default=".", help="Output directory or file path to save evaluation report (default: current directory).")
     parser_eval.add_argument("--verbose", action="store_true", help="Enable verbose logging to debug.log file.")
 
     # --- Preview Command ---
@@ -72,8 +72,8 @@ def main():
             return 1
         
         try:
-            run_inference(config, samples, args.output, verbose=args.verbose)
-            print(f"✅ Inference complete. Results saved to {args.output}")
+            output_file_path = run_inference(config, samples, args.output, verbose=args.verbose)
+            print(f"✅ Inference complete. Results saved to: {output_file_path}")
         except Exception as e:
             print(f"❌ Error during inference: {e}")
             return 1
@@ -93,8 +93,8 @@ def main():
             return 1
         
         try:
-            run_evaluation(config, inference_results, args.output, verbose=args.verbose)
-            print(f"✅ Evaluation complete. Report saved to {args.output}")
+            output_file_path = run_evaluation(config, inference_results, args.output, verbose=args.verbose)
+            print(f"✅ Evaluation complete. Report saved to: {output_file_path}")
         except Exception as e:
             print(f"❌ Error during evaluation: {e}")
             return 1

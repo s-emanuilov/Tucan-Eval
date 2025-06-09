@@ -1,7 +1,8 @@
 import json
 import re
 from typing import Dict, Optional
-from .utils import log_debug
+from pathlib import Path
+from .utils import log_debug, generate_timestamped_filename, ensure_output_directory, get_model_info
 
 def _parse_tool_call(response: str, start_tag: str, end_tag: str) -> Optional[Dict]:
     """Extracts a tool call from the model's response using dynamic boundaries."""
@@ -42,10 +43,35 @@ def _compare_parameters(expected_params: Dict, actual_params: Dict) -> bool:
     return True
 
 def run_evaluation(config, inference_results, output_path, verbose=False):
-    """Evaluates the model's responses and generates a detailed report."""
+    """
+    Evaluates the model's responses and generates a detailed report.
+    
+    Args:
+        config: Configuration dictionary
+        inference_results: Inference results (can be dict with model_info or list)
+        output_path: Path to save results (can be file or directory)
+        verbose: Enable debug logging
+    
+    Returns:
+        Path to the created output file
+    """
     if verbose:
         log_debug("Starting evaluation run with verbose logging enabled")
-        log_debug(f"Evaluating {len(inference_results)} inference results")
+    
+    # Handle both old format (list) and new format (dict with model_info)
+    if isinstance(inference_results, dict) and "inference_results" in inference_results:
+        # New format with model info
+        results_data = inference_results["inference_results"]
+        original_model_info = inference_results.get("model_info", {})
+        original_metadata = inference_results.get("metadata", {})
+    else:
+        # Old format (direct list)
+        results_data = inference_results
+        original_model_info = {}
+        original_metadata = {}
+    
+    if verbose:
+        log_debug(f"Evaluating {len(results_data)} inference results")
     
     detailed_results = []
     
@@ -57,7 +83,7 @@ def run_evaluation(config, inference_results, output_path, verbose=False):
     if verbose:
         log_debug(f"Using tool call format - start_tag: '{start_tag}', end_tag: '{end_tag}'")
     
-    for i, result in enumerate(inference_results):
+    for i, result in enumerate(results_data):
         expected = result["expected_behavior"]
         model_response = result["model_response"]
         parsed_call = _parse_tool_call(model_response, start_tag, end_tag)
@@ -87,16 +113,49 @@ def run_evaluation(config, inference_results, output_path, verbose=False):
         detailed_results.append({**result, "parsed_call": parsed_call, "is_correct": error_type == "CORRECT", "error_type": error_type})
 
     if verbose:
-        log_debug(f"Evaluation completed. Processed {len(inference_results)} results")
+        log_debug(f"Evaluation completed. Processed {len(results_data)} results")
 
     summary = _create_and_print_summary(detailed_results)
     
     if verbose:
         log_debug(f"Final summary: {summary}")
     
-    final_report = {"summary": summary, "detailed_results": detailed_results}
-    with open(output_path, 'w', encoding='utf-8') as f:
-        json.dump(final_report, f, ensure_ascii=False, indent=2)
+    # Handle output path - determine if it's a directory or file
+    output_path = Path(output_path)
+    
+    # If no extension provided or it's an existing directory, treat as directory
+    if not output_path.suffix or output_path.is_dir():
+        output_dir = ensure_output_directory(output_path)
+        filename = generate_timestamped_filename("evaluation", "json")
+        final_output_path = output_dir / filename
+    else:
+        # It's a specific file path
+        final_output_path = ensure_output_directory(output_path)
+    
+    # Get current model information (may be different from inference if config changed)
+    current_model_info = get_model_info(config)
+    
+    # Create final report with model info, original inference info, and evaluation results
+    final_report = {
+        "model_info": current_model_info,
+        "original_inference_info": original_model_info,
+        "original_metadata": original_metadata,
+        "evaluation_summary": summary,
+        "detailed_results": detailed_results,
+        "evaluation_metadata": {
+            "total_evaluated": len(detailed_results),
+            "evaluation_timestamp": current_model_info["timestamp"]
+        }
+    }
+    
+    try:
+        with open(final_output_path, 'w', encoding='utf-8') as f:
+            json.dump(final_report, f, ensure_ascii=False, indent=2)
+        print(f"✅ Evaluation report saved successfully to: {final_output_path.absolute()}")
+        return str(final_output_path.absolute())
+    except Exception as e:
+        print(f"❌ Error saving evaluation report: {e}")
+        raise
 
 def _create_and_print_summary(results):
     """Creates, prints, and returns the evaluation summary."""
