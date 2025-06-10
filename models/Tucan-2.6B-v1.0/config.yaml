@@ -10,7 +10,6 @@ hf_token: "YOUR_HF_TOKEN_HERE" # Optional: For gated/private models
 use_gpu: true
 load_in_4bit: true
 dtype: bfloat16 # Use bfloat16 for optimal performance with Gemma-based models
-batch_size: 4 # Number of samples to process simultaneously (smaller model can handle larger batches)
 
 # --- System Prompt Template ---
 # Complete working system prompt template with proper placeholders

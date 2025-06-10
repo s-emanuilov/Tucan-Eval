@@ -22,12 +22,12 @@ def get_requirements():
 setup(
     name="tucan-eval",
     version="1.0.0",
-    author="Your Name",  # Update this
-    author_email="your.email@example.com",  # Update this
+    author="Simeon Emnuilov",
+    author_email="simeon.emanuilov@gmail.com",
     description="A Function-Calling Evaluation Framework for Language Models",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/your-username/tucan",  # Update this
+    url="https://github.com/s-emanuilov/tucan",
     packages=find_packages(),
     classifiers=[
         "Development Status :: 4 - Beta",

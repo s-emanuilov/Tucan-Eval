@@ -229,12 +229,13 @@ def ensure_output_directory(output_path):
         output_path.parent.mkdir(parents=True, exist_ok=True)
         return output_path
 
-def get_model_info(config):
+def get_model_info(config, batch_size=None):
     """
     Extracts model information and configuration for inclusion in outputs.
     
     Args:
         config: Configuration dictionary
+        batch_size: Optional batch size used for inference (if applicable)
     
     Returns:
         Dictionary containing model information
@@ -246,10 +247,14 @@ def get_model_info(config):
             "use_gpu": config.get("use_gpu", False),
             "load_in_4bit": config.get("load_in_4bit", True),
             "dtype": config.get("dtype"),
-            "batch_size": config.get("batch_size", 1),
             "generation_params": config.get("generation_params", {}),
             "prompt_settings": config.get("prompt_settings", {}),
             "system_prompt_template": config.get("system_prompt_template", "")
         }
     }
+    
+    # Include batch_size only if provided (for inference operations)
+    if batch_size is not None:
+        model_info["configuration"]["batch_size"] = batch_size
+    
     return model_info

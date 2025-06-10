@@ -24,7 +24,7 @@ Clone the repository and install the required dependencies.
 
 ```bash
 # Clone the repository
-git clone https://github.com/your-username/tucan.git
+git clone https://github.com/s-emanuilov/tucan.git
 cd tucan
 
 # Install dependencies
@@ -54,14 +54,13 @@ Before running, create a `config.yaml` file to define your model, prompts, and g
 
 ```yaml
 # Hugging Face model name or local path to your fine-tuned model
-model_name: "your-username/your-finetuned-model"
+model_name: "s-emanuilov/your-finetuned-model"
 hf_token: "YOUR_HF_TOKEN_HERE" # Optional: For gated/private models
 
 # --- GPU / Performance Settings ---
 use_gpu: true
 load_in_4bit: true
 dtype: bfloat16 # Use bfloat16 for optimal performance (recommended for Gemma-based models)
-batch_size: 1 # Number of samples to process simultaneously (default: 1)
 
 # --- System Prompt Template ---
 # The main system prompt for function calling.
@@ -100,11 +99,7 @@ generation_params:
   top_p: 1.0
   repetition_penalty: 1.1
 
-# --- Batch Processing Settings ---
-# Set batch_size > 1 to process multiple samples simultaneously for faster inference.
-# Higher batch sizes use more GPU memory but can significantly speed up processing.
-# Recommended values: 1-8 depending on your GPU memory and model size.
-batch_size: 4
+
   ```
 ### Step 2: Prepare Evaluation Data
 Ensure you have a JSON file containing your test scenarios. Each scenario should include the user_message, functions available, and the `expected_behavior`.
@@ -152,10 +147,17 @@ python -m tucan infer \
   --config my_config.yaml \
   --samples username/repo-name/evaluation_data.json \
   --output ./results/my_inference.json
+
+# Use batch processing for faster inference (process 4 samples simultaneously)
+python -m tucan infer \
+  --config my_config.yaml \
+  --samples my_evaluation.json \
+  --batch-size 4
 ```
 
 Additional options:
 - `--output`: Output directory or file path (default: current directory with timestamped filename)
+- `--batch-size`: Number of samples to process simultaneously (default: 1)
 - `--source-type`: Specify source type (`auto`, `local`, `hf_dataset`, `hf_file`)
 - `--split`: Dataset split for HF datasets (`train`, `test`, `validation`)
 - `--subset`: Dataset subset/configuration for HF datasets
@@ -202,19 +204,26 @@ This will print a detailed summary to the console and save the comprehensive res
 
 ## ⚡ Batch Processing
 
-Tucan now supports batch processing to significantly speed up inference, especially on GPU setups. You can control batch processing through the `batch_size` parameter in your configuration:
+Tucan supports batch processing to significantly speed up inference, especially on GPU setups. You can control batch processing through the `--batch-size` command line parameter during inference:
 
-```yaml
-# --- GPU / Performance Settings ---
-use_gpu: true
-load_in_4bit: true
-batch_size: 4  # Process 4 samples simultaneously
+```bash
+# Process 4 samples simultaneously for faster inference
+python -m tucan infer \
+  --config my_config.yaml \
+  --samples my_evaluation.json \
+  --batch-size 4
+
+# Default behavior (sequential processing)
+python -m tucan infer \
+  --config my_config.yaml \
+  --samples my_evaluation.json \
+  --batch-size 1
 ```
 
 **Batch Size Guidelines:**
-- **`batch_size: 1`** - Sequential processing (original behavior), most memory-efficient
-- **`batch_size: 2-4`** - Good balance for most GPUs with 8-16GB VRAM
-- **`batch_size: 8+`** - For high-end GPUs with 24GB+ VRAM and large datasets
+- **`--batch-size 1`** - Sequential processing (default), most memory-efficient
+- **`--batch-size 2-4`** - Good balance for most GPUs with 8-16GB VRAM
+- **`--batch-size 8+`** - For high-end GPUs with 24GB+ VRAM and large datasets
 
 **Benefits:**
 - **Faster Processing:** Batch processing can be 2-4x faster than sequential processing

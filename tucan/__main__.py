@@ -18,6 +18,7 @@ def main():
     parser_infer.add_argument("--source-type", choices=["auto", "local", "hf_dataset", "hf_file"], default="auto", help="Type of sample source.")
     parser_infer.add_argument("--split", type=str, help="Dataset split to use (for HF datasets).")
     parser_infer.add_argument("--subset", type=str, help="Dataset subset/configuration (for HF datasets).")
+    parser_infer.add_argument("--batch-size", type=int, default=1, help="Number of samples to process simultaneously (default: 1).")
     parser_infer.add_argument("--verbose", action="store_true", help="Enable verbose logging to debug.log file.")
 
     # --- Evaluation Command ---
@@ -71,8 +72,13 @@ def main():
             print(f"❌ Error loading samples: {e}")
             return 1
         
+        # Validate batch size
+        if args.batch_size < 1:
+            print(f"❌ Error: batch_size must be a positive integer, got: {args.batch_size}")
+            return 1
+        
         try:
-            output_file_path = run_inference(config, samples, args.output, verbose=args.verbose)
+            output_file_path = run_inference(config, samples, args.output, batch_size=args.batch_size, verbose=args.verbose)
             print(f"✅ Inference complete. Results saved to: {output_file_path}")
         except Exception as e:
             print(f"❌ Error during inference: {e}")

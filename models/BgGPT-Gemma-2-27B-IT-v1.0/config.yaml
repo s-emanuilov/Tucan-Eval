@@ -10,7 +10,6 @@ hf_token: "YOUR_HF_TOKEN_HERE" # Optional: For gated/private models
 use_gpu: true
 load_in_4bit: true
 dtype: null # Auto-detects the best dtype
-batch_size: 2 # Number of samples to process simultaneously (default: 1)
 
 # --- System Prompt Template ---
 # Complete working system prompt template with proper placeholders

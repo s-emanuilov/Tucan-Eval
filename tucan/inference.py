@@ -6,7 +6,7 @@ from tqdm import tqdm
 from transformers import GenerationConfig
 from .utils import build_prompt, initialize_model, log_debug, clear_debug_log, log_prompt_and_response, generate_timestamped_filename, ensure_output_directory, get_model_info
 
-def run_inference(config, samples, output_path, verbose=False):
+def run_inference(config, samples, output_path, batch_size=1, verbose=False):
     """
     Runs inference on all samples and saves the raw model outputs.
     
@@ -14,6 +14,7 @@ def run_inference(config, samples, output_path, verbose=False):
         config: Configuration dictionary
         samples: List of sample dictionaries
         output_path: Path to save results (can be file or directory)
+        batch_size: Number of samples to process simultaneously (default: 1)
         verbose: Enable debug logging to debug.log
     
     Returns:
@@ -74,8 +75,6 @@ def run_inference(config, samples, output_path, verbose=False):
         print(f"❌ Error setting up generation config: {e}")
         raise
 
-    # Get batch size from config, default to 1 for sequential processing
-    batch_size = config.get('batch_size', 1)
     if verbose:
         log_debug(f"Using batch size: {batch_size}")
 
@@ -194,7 +193,7 @@ def run_inference(config, samples, output_path, verbose=False):
         final_output_path = ensure_output_directory(output_path)
     
     # Get model information to include in output
-    model_info = get_model_info(config)
+    model_info = get_model_info(config, batch_size)
     
     # Create final output with model info and results
     final_output = {
