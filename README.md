@@ -1,4 +1,5 @@
-# 🦜 Tucan: A Function-Calling Evaluation Framework
+# 🦜 Tucan eval
+## A Function-Calling Evaluation Framework
 
 A flexible, configuration-driven framework for evaluating the function-calling capabilities of Language Models.
 
@@ -16,7 +17,7 @@ This project was born from the need to reliably test fine-tuned models like the 
 * **🔄 Two-Step Workflow:** A clear and distinct `infer` and `evaluate` process that separates model generation from analysis.
 * **🏷️ Customizable Prompts:** Easily define custom system prompts, tool-call tags (e.g., ````tool_call```` or `<tool_call>`), and prompt headers to match any model's required format.
 * **📊 Detailed Reporting:** Generates a comprehensive JSON report with overall accuracy, per-category breakdowns, and a detailed error analysis.
-* **🚀 High-Performance:** Built using standard HuggingFace transformers with support for batch processing and 4-bit quantization for efficient inference.
+
 
 ## 📦 Installation
 
@@ -32,11 +33,6 @@ pip install -r requirements.txt
 
 # Optional: Install in development mode
 pip install -e .
-```
-
-### Alternative Installation (PyPI - Coming Soon)
-```bash
-pip install tucan-eval
 ```
 
 ## 🚀 Usage
@@ -252,12 +248,6 @@ The framework provides comprehensive outputs with rich metadata and model inform
 - **evaluation_metadata**: Processing statistics and evaluation timestamp
 
 All output files include complete model configuration information, making it easy to reproduce results and track which model settings were used for each evaluation run.
-
-## 💡 What does TUCAN stand for?
-
-**TUCAN** is a model-centric name that stands for **T**ool-**U**sing **C**apable **A**ssistant **N**atively.
-
-This reflects the project's goal of creating models with deeply integrated and "native" tool-use skills, moving beyond simple language fluency to become truly capable assistants.
 
 ## 📄 License
 
