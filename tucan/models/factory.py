@@ -56,14 +56,26 @@ class ModelFactory:
         if model_kwargs is None:
             model_kwargs = {}
         
+        # Add default model kwargs optimized for BgGPT/Gemma models
+        model_kwargs.setdefault('dtype', 'bfloat16')  # Recommended for BgGPT models
+        model_kwargs.setdefault('load_in_4bit', True)  # Memory efficient
+        
+        # Set attention implementation for Gemma models (flash attention not supported)
+        if 'gemma' in model_name.lower() or 'bggpt' in model_name.lower():
+            model_kwargs.setdefault('attn_implementation', 'eager')
+        
         if generation_params is None:
+            # Default generation parameters optimized for BgGPT/Gemma models
             generation_params = {
-                'max_new_tokens': 512,
+                'max_new_tokens': 2048,        # Recommended for BgGPT models
                 'temperature': 0.1,
                 'top_k': 25,
                 'top_p': 1.0,
                 'repetition_penalty': 1.1,
-                'do_sample': True
+                'do_sample': True,
+                'use_cache': True,
+                'eos_token_id': [1, 107],      # Standard for BgGPT/Gemma 2 models
+                'stop_token_ids': [1, 107]     # vLLM compatibility
             }
         
         if tool_call_format is None:

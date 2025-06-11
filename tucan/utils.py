@@ -107,8 +107,11 @@ def initialize_model(config):
         "token": token,
         "trust_remote_code": True,
         "device_map": "auto" if device == "cuda" else None,
-        "attn_implementation": "eager",  # Important: eager attention for Gemma models
     }
+    
+    # Add attention implementation if specified in config
+    if config.get("attn_implementation"):
+        model_kwargs["attn_implementation"] = config["attn_implementation"]
 
     # Handle dtype properly - prefer bfloat16 for better performance
     if config.get("dtype"):

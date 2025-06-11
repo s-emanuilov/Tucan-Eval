@@ -1,11 +1,14 @@
-# Tucan: Function-Calling Evaluation Framework
+# 🦜 Tucan: Function Calling Evaluation Framework
 
-[![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/release/python-380/)
-[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+**Tucan** is a comprehensive evaluation framework for assessing function-calling capabilities of language models, with optimized defaults for Bulgarian language models like BgGPT.
+
+[![License: Apache 2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+[![Python 3.8+](https://img.shields.io/badge/Python-3.8+-blue.svg)](https://www.python.org/downloads/)
+[![HuggingFace](https://img.shields.io/badge/🤗-Models-yellow.svg)](https://huggingface.co/collections/s-emanuilov/tucan-models-674b4d68e75bd49156b5ff2a)
 
 **The official evaluation framework for [Tucan models](https://huggingface.co/collections/s-emanuilov/tucan-tool-using-and-function-calling-in-bulgarian-684546a02b297f30768993dd) 🇧🇬**
 
-Tucan provides a **unified command-line interface** for evaluating language models on function-calling tasks, designed initially for the [Tucan series](https://huggingface.co/collections/s-emanuilov/tucan-tool-using-and-function-calling-in-bulgarian-684546a02b297f30768993dd) but adaptable for any model evaluation.
+Tucan provides a **unified command-line interface** for evaluating language models on function-calling tasks, designed initially for the [Tucan series](https://huggingface.co/collections/s-emanuilov/tucan-tool-using-and-function-calling-in-bulgarian-684546a02b297f30768993dd) but adaptable for any model evaluation with optimized defaults for BgGPT models.
 
 **🎯 Single Command Evaluation** - No config files, no two-step processes, just pure CLI power!
 
@@ -26,85 +29,114 @@ Tucan provides a **unified command-line interface** for evaluating language mode
 
 ---
 
+## 🎯 Key Features
+
+- **🔥 Zero-Configuration Setup**: Optimized defaults for BgGPT/Gemma models - just specify the model name!
+- **⚡ Efficient Evaluation**: Built-in support for quantization, batching, and memory optimization
+- **🌍 Multi-Language Support**: Specifically optimized for Bulgarian language models with English fallback
+- **📊 Comprehensive Analysis**: Detailed accuracy metrics, error analysis, and model comparisons
+- **🔧 CLI-First Design**: Everything configurable via command line - no config files needed
+- **🤖 Multiple Model Support**: HuggingFace transformers, OpenAI API, and local models
+
+---
+
 ## 🚀 Quick Start
 
 ### Installation
 
 ```bash
-git clone https://github.com/s-emanuilov/tucan.git
-cd tucan
-pip install -e .
+pip install tucan-eval
+# OR from source
+git clone https://github.com/s-emanuilov/Tucan.git
+cd Tucan && pip install -e .
 ```
 
-### Basic Usage - Just Like lm-eval!
+### Evaluate BgGPT Models (Zero Configuration)
 
 ```bash
-# Evaluate Tucan models
-tucan --model Qwen/Qwen3-1.7B \
+# Evaluate BgGPT model with optimized defaults - everything just works!
+tucan --model INSAIT-Institute/BgGPT-Gemma-2-2.6B-IT-v1.0 \
       --samples s-emanuilov/Tucan-BG-Eval-v1.0 \
       --device cuda \
       --batch_size 4
 
-# Evaluate with optimized parameters for Tucan models
-tucan --model s-emanuilov/Tucan-2.6B-v1.0,dtype=bfloat16,attn_implementation=eager \
-      --samples s-emanuilov/Tucan-BG-Eval-v1.0 \
+# Evaluate other model sizes
+tucan --model INSAIT-Institute/BgGPT-Gemma-2-9B-IT-v1.0 \
       --device cuda \
-      --gen_kwargs temperature=0.1,top_k=25,top_p=1.0,repetition_penalty=1.1,max_new_tokens=512,do_sample=True \
-      --batch_size 4 \
-      --output_path results/
+      --batch_size 2
 
-# Compare with other models (e.g., OpenAI)
+# Override defaults if needed
+tucan --model INSAIT-Institute/BgGPT-Gemma-2-2.6B-IT-v1.0,dtype=float16,load_in_4bit=false \
+      --gen_kwargs temperature=0.2,max_new_tokens=1024 \
+      --device cuda
+```
+
+### Evaluate Tucan Models
+
+```bash
+# Evaluate Tucan models
+tucan --model s-emanuilov/Tucan-2.6B-v1.0 \
+      --samples s-emanuilov/Tucan-BG-Eval-v1.0 \
+      --device cuda
+
+# Compare with OpenAI models
 tucan --model gpt-4.1-mini \
       --openai_api_key YOUR_API_KEY \
       --samples s-emanuilov/Tucan-BG-Eval-v1.0 
 ```
 
+## 🔧 Built-in Optimizations
+
+Tucan comes with **optimized defaults for BgGPT models**:
+
+| Parameter | Default Value | Description |
+|-----------|--------------|-------------|
+| `dtype` | `bfloat16` | Optimal precision for BgGPT models |
+| `attn_implementation` | `eager` | Required for Gemma 2 models (flash attention not supported) |
+| `load_in_4bit` | `true` | Memory-efficient 4-bit quantization |
+| `max_new_tokens` | `2048` | Recommended by model authors |
+| `temperature` | `0.1` | Optimal for function calling |
+| `top_k` | `25` | Balanced creativity vs accuracy |
+| `eos_token_id` | `[1, 107]` | Proper EOS tokens for BgGPT/Gemma 2 |
+
+**No config files needed!** Everything is handled automatically based on the model name.
+
 ## 📖 Command Examples
 
 <details>
-<summary><strong>🦜 Tucan Model Examples</strong> (Click to expand)</summary>
+<summary><strong>🦜 BgGPT Model Examples</strong> (Click to expand)</summary>
+
+### BgGPT Models (Automatic Optimization)
+
+```bash
+# BgGPT 2.6B - Defaults are automatically optimized
+tucan --model INSAIT-Institute/BgGPT-Gemma-2-2.6B-IT-v1.0 \
+      --device cuda \
+      --batch_size 8
+
+# BgGPT 9B - All parameters auto-configured
+tucan --model INSAIT-Institute/BgGPT-Gemma-2-9B-IT-v1.0 \
+      --device cuda \
+      --batch_size 4
+
+# Override specific parameters when needed
+tucan --model INSAIT-Institute/BgGPT-Gemma-2-2.6B-IT-v1.0 \
+      --gen_kwargs temperature=0.2,top_k=50 \
+      --device cuda
+```
 
 ### Tucan Models
 
 ```bash
 # Tucan 2.6B - Compact and efficient
-tucan --model s-emanuilov/Tucan-2.6B-v1.0 \
+tucan --model s-emanuilov/Tucan-2.6B-v1.0,dtype=bfloat16,attn_implementation=eager \
       --device cuda \
       --batch_size 8
 
 # Tucan 9B - Balanced performance
-tucan --model s-emanuilov/Tucan-9B-v1.0,dtype=bfloat16 \
+tucan --model s-emanuilov/Tucan-9B-v1.0,dtype=bfloat16,attn_implementation=eager \
       --device cuda \
-      --batch_size 4 \
-      --gen_kwargs temperature=0.1,top_k=25
-
-# Tucan 27B - Maximum capability
-tucan --model s-emanuilov/Tucan-27B-v1.0,dtype=bfloat16 \
-      --device cuda \
-      --batch_size 2 \
-      --gen_kwargs max_new_tokens=1024
-```
-
-### Model Comparison Workflow
-
-```bash
-# Benchmark all Tucan model sizes
-tucan --model s-emanuilov/Tucan-2.6B-v1.0,dtype=bfloat16 \
-      --device cuda --batch_size 8 --samples eval_data.json \
-      --output_path results/tucan_2.6b.json
-
-tucan --model s-emanuilov/Tucan-9B-v1.0,dtype=bfloat16 \
-      --device cuda --batch_size 4 --samples eval_data.json \
-      --output_path results/tucan_9b.json
-
-tucan --model s-emanuilov/Tucan-27B-v1.0,dtype=bfloat16 \
-      --device cuda --batch_size 2 --samples eval_data.json \
-      --output_path results/tucan_27b.json
-
-# Compare with baseline models
-tucan --model gpt-4 --openai_api_key $OPENAI_KEY \
-      --samples eval_data.json \
-      --output_path results/gpt4_baseline.json
+      --batch_size 4
 ```
 
 </details>
@@ -116,8 +148,8 @@ tucan --model gpt-4 --openai_api_key $OPENAI_KEY \
 # Local model
 tucan --model ./models/my-local-model --device cuda --batch_size 2
 
-# HuggingFace models with quantization
-tucan --model microsoft/DialoGPT-large,load_in_4bit=true \
+# HuggingFace models with custom parameters
+tucan --model microsoft/DialoGPT-large,load_in_4bit=true,dtype=bfloat16 \
       --gen_kwargs max_new_tokens=1024,temperature=0.7 \
       --batch_size 8
 
@@ -138,20 +170,32 @@ tucan --model gpt-4 \
 ### Core Arguments
 ```bash
 --model, -m MODEL           # Model name/path (required for evaluation)
---device DEVICE             # Device: auto, cpu, cuda, cuda:0, etc.
+                           # Format: model_name[,param=value,...]
+                           # Example: INSAIT-Institute/BgGPT-Gemma-2-2.6B-IT-v1.0,dtype=float16
+--device DEVICE             # Device: auto, cpu, cuda, cuda:0, etc. (default: auto)
 --batch_size SIZE           # Batch size for inference (default: 1)
 ```
 
 ### Generation Parameters
 ```bash
---gen_kwargs PARAMS         # comma-separated key=value pairs
-                           # Example: temperature=0.1,top_k=25,max_new_tokens=512
+--gen_kwargs PARAMS         # Override default generation parameters
+                           # Format: comma-separated key=value pairs
+                           # Default values are optimized for BgGPT models
+                           # Example: temperature=0.1,top_k=25,max_new_tokens=2048,eos_token_id=[1,107]
+```
+
+### Model Parameters (via --model)
+```bash
+# Available model parameters:
+dtype=bfloat16              # Data type (bfloat16, float16, float32)
+load_in_4bit=true          # Enable 4-bit quantization
+attn_implementation=eager   # Attention implementation (eager for Gemma models)
 ```
 
 ### Data Arguments
 ```bash
 --samples, -s PATH          # Path to evaluation samples
---source_type TYPE          # auto, local, hf_dataset, hf_file
+--source_type TYPE          # auto, local, hf_dataset, hf_file (default: auto)
 --split SPLIT              # Dataset split (train, test, validation)
 --subset SUBSET            # Dataset subset/configuration
 ```
@@ -164,28 +208,28 @@ tucan --model gpt-4 \
 
 ### Output & Debugging
 ```bash
---output_path, -o PATH     # Output directory or file
---log_samples              # Log detailed sample info
---verbose, -v              # Enable verbose logging
+--output_path, -o PATH     # Output directory or file (default: current directory)
+--log_samples              # Log detailed sample info for debugging
+--verbose, -v              # Enable verbose logging to debug.log
 ```
 
 ### Utility Commands
 ```bash
---preview_dataset          # Preview dataset without evaluation
---list_files REPO          # List files in HF repository
+--preview_dataset          # Preview dataset structure without evaluation
+--list_files REPO          # List available files in HF repository
 ```
 
 ### Advanced Options
 ```bash
---limit N                  # Limit number of samples
---system_prompt TEXT       # Custom system prompt
---tool_call_format TAGS    # start_tag,end_tag format
+--limit N                  # Limit number of samples to evaluate
+--system_prompt TEXT       # Custom system prompt template
+--tool_call_format TAGS    # Tool call format as start_tag,end_tag (default: ```tool_call,```)
 
-# Text Customization (for multi-language support)
+# Text Customization (optimized for Bulgarian by default)
 --functions_header TEXT    # Header for functions section (default: "## Налични функции:")
 --user_query_header TEXT   # Header for user query section (default: "## Потребителска заявка:")
 --user_prefix TEXT         # Prefix for user messages (default: "Потребител:")
---default_system_prompt TEXT  # Default system prompt text (default: Bulgarian)
+--default_system_prompt TEXT  # Default system prompt (default: Bulgarian text)
 --function_system_prompt_template TEXT  # Jinja2 template for function system prompt
 ```
 
@@ -197,11 +241,11 @@ tucan --model gpt-4 \
 # Preview your dataset structure
 tucan --preview_dataset --samples my_dataset.json
 
-# Explore Tucan model files
-tucan --list_files s-emanuilov/Tucan-9B-v1.0
+# Explore available model files
+tucan --list_files INSAIT-Institute/BgGPT-Gemma-2-2.6B-IT-v1.0
 
 # Use the official Tucan evaluation dataset
-tucan --model s-emanuilov/Tucan-9B-v1.0 \
+tucan --model INSAIT-Institute/BgGPT-Gemma-2-2.6B-IT-v1.0 \
       --samples s-emanuilov/Tucan-BG-Eval-v1.0 \
       --source_type hf_dataset
 ```

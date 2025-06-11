@@ -47,25 +47,37 @@ def run_inference(config, samples, output_path, batch_size=1, verbose=False):
     try:
         generation_params = config.get("generation_params", {})
 
-        # Handle EOS tokens properly - check for Gemma-style models
-        eos_token_ids = [tokenizer.eos_token_id]
-
-        # For Gemma models, add the end_of_turn token (107) if available
-        model_name = config.get("model_name", "").lower()
-        if "gemma" in model_name or "tucan" in model_name or "bggpt" in model_name:
-            # Gemma models typically use [1, 107] as EOS tokens
-            end_of_turn_token = 107
-            if end_of_turn_token not in eos_token_ids:
-                eos_token_ids.append(end_of_turn_token)
+        # Handle EOS tokens - check if configured in generation_params first
+        if 'eos_token_id' in generation_params:
+            eos_token_ids = generation_params['eos_token_id']
+            # Ensure it's a list
+            if not isinstance(eos_token_ids, list):
+                eos_token_ids = [eos_token_ids]
+        elif 'stop_token_ids' in generation_params:
+            # Alternative format for vLLM compatibility
+            eos_token_ids = generation_params['stop_token_ids']
+            if not isinstance(eos_token_ids, list):
+                eos_token_ids = [eos_token_ids]
         else:
-            # For other models, check for <end_of_turn> token
-            end_of_turn_token = "<end_of_turn>"
-            if end_of_turn_token in tokenizer.vocab:
-                end_of_turn_token_id = tokenizer.convert_tokens_to_ids(
-                    end_of_turn_token
-                )
-                if end_of_turn_token_id not in eos_token_ids:
-                    eos_token_ids.append(end_of_turn_token_id)
+            # Fallback to auto-detection for backwards compatibility
+            eos_token_ids = [tokenizer.eos_token_id]
+
+            # For Gemma models, add the end_of_turn token (107) if available
+            model_name = config.get("model_name", "").lower()
+            if "gemma" in model_name or "tucan" in model_name or "bggpt" in model_name:
+                # Gemma models typically use [1, 107] as EOS tokens
+                end_of_turn_token = 107
+                if end_of_turn_token not in eos_token_ids:
+                    eos_token_ids.append(end_of_turn_token)
+            else:
+                # For other models, check for <end_of_turn> token
+                end_of_turn_token = "<end_of_turn>"
+                if end_of_turn_token in tokenizer.vocab:
+                    end_of_turn_token_id = tokenizer.convert_tokens_to_ids(
+                        end_of_turn_token
+                    )
+                    if end_of_turn_token_id not in eos_token_ids:
+                        eos_token_ids.append(end_of_turn_token_id)
 
         # Create generation config with proper parameters
         generation_config = GenerationConfig(

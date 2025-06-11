@@ -28,6 +28,12 @@ def parse_key_value_args(arg_string: str) -> dict:
             result[key] = value.lower() == "true"
         elif value.replace(".", "").replace("-", "").isdigit():
             result[key] = float(value) if "." in value else int(value)
+        elif value.startswith("[") and value.endswith("]"):
+            # Handle list values like [1,107]
+            try:
+                result[key] = eval(value)  # Simple list parsing
+            except:
+                result[key] = value
         else:
             result[key] = value
 
@@ -41,13 +47,18 @@ def main():
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
-  # Evaluate a HuggingFace model with custom generation parameters
-  tucan --model INSAIT-Institute/BgGPT-Gemma-2-2.6B-IT-v1.0,dtype=bfloat16,attn_implementation=eager \\
+  # Evaluate a BgGPT model with optimized parameters (defaults are already optimized for BgGPT)
+  tucan --model INSAIT-Institute/BgGPT-Gemma-2-2.6B-IT-v1.0 \\
         --device cuda \\
-        --gen_kwargs temperature=0.1,top_k=25,top_p=1.0,repetition_penalty=1.1,max_new_tokens=2048,do_sample=True \\
         --batch_size 4 \\
         --tasks function_calling \\
         --output_path results/
+
+  # Override default parameters
+  tucan --model INSAIT-Institute/BgGPT-Gemma-2-2.6B-IT-v1.0,dtype=float16,load_in_4bit=false \\
+        --gen_kwargs temperature=0.2,top_k=50,eos_token_id=[1,107] \\
+        --device cuda \\
+        --batch_size 2
 
   # Evaluate a local model
   tucan --model ./models/my-model \\
@@ -72,7 +83,7 @@ Examples:
         type=str,
         help="Model name or path. Format: model_name[,key=value,...]. "
         'Examples: "gpt-4", "meta-llama/Llama-2-7b-hf", "./local/model", '
-        '"INSAIT-Institute/BgGPT-Gemma-2-2.6B-IT-v1.0,dtype=bfloat16"',
+        '"INSAIT-Institute/BgGPT-Gemma-2-2.6B-IT-v1.0,dtype=bfloat16,attn_implementation=eager"',
     )
 
     model_group.add_argument(
@@ -89,7 +100,8 @@ Examples:
         type=str,
         default="",
         help="Generation parameters as comma-separated key=value pairs. "
-        "Example: temperature=0.1,top_k=25,max_new_tokens=512",
+        "Defaults are optimized for BgGPT models. "
+        "Example: temperature=0.1,top_k=25,max_new_tokens=2048,eos_token_id=[1,107]",
     )
 
     gen_group.add_argument(

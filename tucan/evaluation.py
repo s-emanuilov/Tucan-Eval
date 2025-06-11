@@ -3,6 +3,7 @@
 Evaluation module for the Tucan framework.
 """
 
+import json
 from typing import Dict, List, Any, Optional
 from .evaluate import _parse_tool_call, _compare_parameters
 
@@ -74,10 +75,23 @@ class FunctionCallEvaluator:
         """Parse a tool call from the model's response."""
         return _parse_tool_call(response, start_tag, end_tag)
 
-    def _determine_error_type(self, expected: Dict, parsed_call: Optional[Dict]) -> str:
+    def _determine_error_type(self, expected: Any, parsed_call: Optional[Dict]) -> str:
         """Determine the type of error (if any) in the model's response."""
         if parsed_call and "error" in parsed_call:
             return "MALFORMED_JSON"
+
+        # Handle case where expected_behavior might be a string instead of dict
+        if isinstance(expected, str):
+            try:
+                # Try to parse it as JSON in case it's a JSON string
+                expected = json.loads(expected)
+            except (json.JSONDecodeError, ValueError):
+                # If it can't be parsed as JSON, it's a data format error
+                return "DATA_FORMAT_ERROR"
+        
+        # Expected should be a dictionary
+        if not isinstance(expected, dict):
+            return "DATA_FORMAT_ERROR"
 
         should_call = expected.get("should_call_function", False)
 
