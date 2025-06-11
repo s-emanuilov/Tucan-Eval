@@ -1,254 +1,368 @@
-# 🦜 Tucan eval
-## A Function-Calling Evaluation Framework
+# Tucan: Function-Calling Evaluation Framework
 
-A flexible, configuration-driven framework for evaluating the function-calling capabilities of Language Models.
+[![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/release/python-380/)
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+
+**The official evaluation framework for [Tucan models](https://huggingface.co/collections/s-emanuilov/tucan-tool-using-and-function-calling-in-bulgarian-684546a02b297f30768993dd) 🇧🇬**
+
+Tucan provides a **unified command-line interface** for evaluating language models on function-calling tasks, designed initially for the [Tucan series](https://huggingface.co/collections/s-emanuilov/tucan-tool-using-and-function-calling-in-bulgarian-684546a02b297f30768993dd) but adaptable for any model evaluation.
+
+**🎯 Single Command Evaluation** - No config files, no two-step processes, just pure CLI power!
+
+> 💡 **Tip**: Click on expandable sections (▶️) below to see detailed examples and documentation
+
+## 🦜 About Tucan Models
+
+**TUCAN (Tool-Using Capable Assistant Navigator)** is a series of open-source Bulgarian language models fine-tuned specifically for function calling and tool use. These models can interact with external tools, APIs, and databases, making them appropriate for building AI agents and Model Context Protocol (MCP) applications.
+
+📄 *Full methodology, dataset details, and evaluation results coming in the upcoming paper*
+
+**Available Models:**
+- 🔹 [Tucan-2.6B-v1.0](https://huggingface.co/s-emanuilov/Tucan-2.6B-v1.0) - Compact model for efficient deployment
+- 🔹 [Tucan-9B-v1.0](https://huggingface.co/s-emanuilov/Tucan-9B-v1.0) - Balanced performance and efficiency  
+- 🔹 [Tucan-27B-v1.0](https://huggingface.co/s-emanuilov/Tucan-27B-v1.0) - Maximum capability model
+
+👉 **[View Full Model Collection](https://huggingface.co/collections/s-emanuilov/tucan-tool-using-and-function-calling-in-bulgarian-684546a02b297f30768993dd)**
 
 ---
 
-## Overview
+## 🚀 Quick Start
 
-Tucan is a Python-based command-line tool designed to provide a standardized and reproducible way to measure the performance of Language Models on function-calling and tool-use tasks.
-
-This project was born from the need to reliably test fine-tuned models like the `LLMBG-ToolUse` series. While a base model may have strong language comprehension, it often lacks the ability to consistently generate the precise, structured output required for tool use. Tucan addresses this by providing a framework to rigorously evaluate this specific skill.
-
-## ✨ Features
-
-* **⚙️ Configuration-Driven:** Control everything from a single `config.yaml` file—no code changes needed to test different models or prompt strategies.
-* **🔄 Two-Step Workflow:** A clear and distinct `infer` and `evaluate` process that separates model generation from analysis.
-* **🏷️ Customizable Prompts:** Easily define custom system prompts, tool-call tags (e.g., ````tool_call```` or `<tool_call>`), and prompt headers to match any model's required format.
-* **📊 Detailed Reporting:** Generates a comprehensive JSON report with overall accuracy, per-category breakdowns, and a detailed error analysis.
-
-
-## 📦 Installation
-
-Clone the repository and install the required dependencies.
+### Installation
 
 ```bash
-# Clone the repository
 git clone https://github.com/s-emanuilov/tucan.git
 cd tucan
-
-# Install dependencies
-pip install -r requirements.txt
-
-# Optional: Install in development mode
 pip install -e .
 ```
 
-## 🚀 Usage
-
-Tucan supports loading evaluation data from multiple sources:
-- **Local JSON files** (original functionality) 
-- **HuggingFace datasets** (e.g., `username/dataset-name`)
-- **Individual files from HuggingFace repositories** (e.g., `username/repo-name/file.json`)
-
-The evaluation process is broken into two main steps: **Inference** and **Evaluation**.
-
-### Step 1: Configuration (`config.yaml`)
-
-Before running, create a `config.yaml` file to define your model, prompts, and generation settings.
-
-```yaml
-# Hugging Face model name or local path to your fine-tuned model
-model_name: "s-emanuilov/your-finetuned-model"
-hf_token: "YOUR_HF_TOKEN_HERE" # Optional: For gated/private models
-
-# --- GPU / Performance Settings ---
-use_gpu: true
-load_in_4bit: true
-dtype: bfloat16 # Use bfloat16 for optimal performance (recommended for Gemma-based models)
-
-# --- System Prompt Template ---
-# The main system prompt for function calling.
-# Use the placeholders defined in 'prompt_settings'.
-system_prompt_template: |
-  You are a helpful AI assistant that can call functions.
-  To call a function, respond with the following format:
-  {{ tool_call_start_tag }}
-  { "name": "function_name", "arguments": { "arg1": "value1" } }
-  {{ tool_call_end_tag }}
-
-# --- Prompt Formatting Settings ---
-prompt_settings:
-  # Defines how a tool call is formatted.
-  # Example for XML: start_tag: "<tool_call>", end_tag: "</tool_call>"
-  tool_call_format:
-    start_tag: "```tool_call"
-    end_tag: "```"
-    
-  # Headers for different sections of the prompt (can be empty if not needed).
-  text_headers:
-    functions_header: "## Available Functions:"
-    user_query_header: "## User Query:"
-  
-  # Template for scenarios where NO functions are available.
-  no_functions_prompt_template: "You are a helpful AI assistant.\n\nUser: {{user_query}}"
-
-# --- Model Generation Parameters ---
-# Optimized settings matching BgGPT recommendations for Gemma-based models
-generation_params:
-  max_new_tokens: 512
-  use_cache: true
-  do_sample: true
-  temperature: 0.1
-  top_k: 25        # Important for generation quality
-  top_p: 1.0
-  repetition_penalty: 1.1
-
-
-  ```
-### Step 2: Prepare Evaluation Data
-Ensure you have a JSON file containing your test scenarios. Each scenario should include the user_message, functions available, and the `expected_behavior`.
-
-**Quick Start**: Use the provided sample file:
-```bash
-cp examples/sample_evaluation.json ./my_evaluation.json
-cp examples/config.yaml ./my_config.yaml
-# Edit my_config.yaml to point to your model
-```
-
-### Step 3: Explore Available Datasets (Optional)
-
-Before running inference, you can explore available datasets and preview their structure:
+### Basic Usage - Just Like lm-eval!
 
 ```bash
-# List files in a HuggingFace repository
-python -m tucan list-files --repo username/repo-name
+# Evaluate Tucan models
+tucan --model Qwen/Qwen3-1.7B \
+      --samples s-emanuilov/Tucan-BG-Eval-v1.0 \
+      --device cuda \
+      --batch_size 4
 
-# Preview dataset information
-python -m tucan preview --samples username/dataset-name
-python -m tucan preview --samples username/repo-name/file.json
-python -m tucan preview --samples local_file.json
+# Evaluate with optimized parameters for Tucan models
+tucan --model s-emanuilov/Tucan-2.6B-v1.0,dtype=bfloat16,attn_implementation=eager \
+      --samples s-emanuilov/Tucan-BG-Eval-v1.0 \
+      --device cuda \
+      --gen_kwargs temperature=0.1,top_k=25,top_p=1.0,repetition_penalty=1.1,max_new_tokens=512,do_sample=True \
+      --batch_size 4 \
+      --output_path results/
+
+# Compare with other models (e.g., OpenAI)
+tucan --model gpt-4.1-mini \
+      --openai_api_key YOUR_API_KEY \
+      --samples s-emanuilov/Tucan-BG-Eval-v1.0 
 ```
 
-### Step 4: Run Inference
+## 📖 Command Examples
 
-Use the infer command to run your model against evaluation samples from various sources:
+<details>
+<summary><strong>🦜 Tucan Model Examples</strong> (Click to expand)</summary>
+
+### Tucan Models
 
 ```bash
-# From local JSON file - saves to current directory with timestamped filename
-python -m tucan infer \
-  --config my_config.yaml \
-  --samples my_evaluation.json
+# Tucan 2.6B - Compact and efficient
+tucan --model s-emanuilov/Tucan-2.6B-v1.0 \
+      --device cuda \
+      --batch_size 8
 
-# From HuggingFace dataset - specify custom output directory
-python -m tucan infer \
-  --config my_config.yaml \
-  --samples username/dataset-name \
-  --split test \
-  --output ./results
+# Tucan 9B - Balanced performance
+tucan --model s-emanuilov/Tucan-9B-v1.0,dtype=bfloat16 \
+      --device cuda \
+      --batch_size 4 \
+      --gen_kwargs temperature=0.1,top_k=25
 
-# From specific file in HuggingFace repository - specify exact output file
-python -m tucan infer \
-  --config my_config.yaml \
-  --samples username/repo-name/evaluation_data.json \
-  --output ./results/my_inference.json
-
-# Use batch processing for faster inference (process 4 samples simultaneously)
-python -m tucan infer \
-  --config my_config.yaml \
-  --samples my_evaluation.json \
-  --batch-size 4
+# Tucan 27B - Maximum capability
+tucan --model s-emanuilov/Tucan-27B-v1.0,dtype=bfloat16 \
+      --device cuda \
+      --batch_size 2 \
+      --gen_kwargs max_new_tokens=1024
 ```
 
-Additional options:
-- `--output`: Output directory or file path (default: current directory with timestamped filename)
-- `--batch-size`: Number of samples to process simultaneously (default: 1)
-- `--source-type`: Specify source type (`auto`, `local`, `hf_dataset`, `hf_file`)
-- `--split`: Dataset split for HF datasets (`train`, `test`, `validation`)
-- `--subset`: Dataset subset/configuration for HF datasets
-
-The inference output includes:
-- **Model information**: Model name, configuration, and timestamp
-- **Inference results**: Model responses for each scenario
-- **Metadata**: Total samples processed and other statistics
-
-Files are automatically timestamped with format: `inference_YYYYMMDD_HHMMSS_xxxx.json` (where `xxxx` is a random 4-character suffix).
-
-### Step 5: Run Evaluation
-Use the evaluate command to compare the model's responses with the expected outcomes and generate a final report.
+### Model Comparison Workflow
 
 ```bash
-# Evaluate with timestamped output in current directory
-python -m tucan evaluate \
-  --config my_config.yaml \
-  --inferences path/to/inference_file.json
+# Benchmark all Tucan model sizes
+tucan --model s-emanuilov/Tucan-2.6B-v1.0,dtype=bfloat16 \
+      --device cuda --batch_size 8 --samples eval_data.json \
+      --output_path results/tucan_2.6b.json
 
-# Evaluate with custom output directory
-python -m tucan evaluate \
-  --config my_config.yaml \
-  --inferences path/to/inference_file.json \
-  --output ./reports
+tucan --model s-emanuilov/Tucan-9B-v1.0,dtype=bfloat16 \
+      --device cuda --batch_size 4 --samples eval_data.json \
+      --output_path results/tucan_9b.json
 
-# Evaluate with specific output filename
-python -m tucan evaluate \
-  --config my_config.yaml \
-  --inferences path/to/inference_file.json \
-  --output ./reports/my_evaluation.json
+tucan --model s-emanuilov/Tucan-27B-v1.0,dtype=bfloat16 \
+      --device cuda --batch_size 2 --samples eval_data.json \
+      --output_path results/tucan_27b.json
+
+# Compare with baseline models
+tucan --model gpt-4 --openai_api_key $OPENAI_KEY \
+      --samples eval_data.json \
+      --output_path results/gpt4_baseline.json
 ```
 
-The evaluation output includes:
-- **Current model information**: Configuration used for evaluation
-- **Original inference information**: Model info from the inference step
-- **Evaluation summary**: Overall accuracy and performance metrics
-- **Detailed results**: Per-sample analysis and error classification
-- **Evaluation metadata**: Timestamp and processing statistics
+</details>
 
-Files are automatically timestamped with format: `evaluation_YYYYMMDD_HHMMSS_xxxx.json`.
-
-This will print a detailed summary to the console and save the comprehensive results with model information to the specified location.
-
-## ⚡ Batch Processing
-
-Tucan supports batch processing to significantly speed up inference, especially on GPU setups. You can control batch processing through the `--batch-size` command line parameter during inference:
+<details>
+<summary><strong>🔗 Other Model Examples</strong> (Click to expand)</summary>
 
 ```bash
-# Process 4 samples simultaneously for faster inference
-python -m tucan infer \
-  --config my_config.yaml \
-  --samples my_evaluation.json \
-  --batch-size 4
+# Local model
+tucan --model ./models/my-local-model --device cuda --batch_size 2
 
-# Default behavior (sequential processing)
-python -m tucan infer \
-  --config my_config.yaml \
-  --samples my_evaluation.json \
-  --batch-size 1
+# HuggingFace models with quantization
+tucan --model microsoft/DialoGPT-large,load_in_4bit=true \
+      --gen_kwargs max_new_tokens=1024,temperature=0.7 \
+      --batch_size 8
+
+# OpenAI models for comparison
+tucan --model gpt-4 \
+      --openai_api_key YOUR_API_KEY \
+      --gen_kwargs max_new_tokens=512,temperature=0.1 \
+      --samples test_data.json
 ```
 
-**Batch Size Guidelines:**
-- **`--batch-size 1`** - Sequential processing (default), most memory-efficient
-- **`--batch-size 2-4`** - Good balance for most GPUs with 8-16GB VRAM
-- **`--batch-size 8+`** - For high-end GPUs with 24GB+ VRAM and large datasets
+</details>
 
-**Benefits:**
-- **Faster Processing:** Batch processing can be 2-4x faster than sequential processing
-- **GPU Utilization:** Better utilizes GPU parallelism capabilities
-- **Memory Efficient:** Automatic memory cleanup between batches
+## 🔧 CLI Reference
 
-**Note:** Higher batch sizes require more GPU memory. If you encounter out-of-memory errors, reduce the batch size or enable 4-bit quantization.
+<details>
+<summary><strong>📋 Complete CLI Options</strong> (Click to expand)</summary>
 
-## 📈 Output Interpretation
+### Core Arguments
+```bash
+--model, -m MODEL           # Model name/path (required for evaluation)
+--device DEVICE             # Device: auto, cpu, cuda, cuda:0, etc.
+--batch_size SIZE           # Batch size for inference (default: 1)
+```
 
-The framework provides comprehensive outputs with rich metadata and model information:
+### Generation Parameters
+```bash
+--gen_kwargs PARAMS         # comma-separated key=value pairs
+                           # Example: temperature=0.1,top_k=25,max_new_tokens=512
+```
 
-### Inference Output Structure
-- **model_info**: Model name, configuration parameters, and generation timestamp
-- **inference_results**: List of all model responses with expected behaviors
-- **metadata**: Processing statistics (total samples, successful samples, etc.)
+### Data Arguments
+```bash
+--samples, -s PATH          # Path to evaluation samples
+--source_type TYPE          # auto, local, hf_dataset, hf_file
+--split SPLIT              # Dataset split (train, test, validation)
+--subset SUBSET            # Dataset subset/configuration
+```
 
-### Evaluation Report Structure
-- **model_info**: Current model configuration used for evaluation
-- **original_inference_info**: Model information from the original inference run
-- **evaluation_summary**: Performance metrics including:
-  * **Overall Accuracy:** Percentage of scenarios the model passed correctly
-  * **Accuracy by Scenario Type:** Performance breakdown by task type (e.g., `function_call_required`, `ambiguous_function_selection`, `irrelevant_question_with_functions`)
-  * **Error Distribution:** Detailed analysis of failure reasons (`NO_CALL_WHEN_EXPECTED`, `WRONG_PARAMETERS`, `WRONG_FUNCTION`, etc.)
-- **detailed_results**: Per-sample analysis with parsed tool calls and error classifications
-- **evaluation_metadata**: Processing statistics and evaluation timestamp
+### Authentication
+```bash
+--hf_token TOKEN           # HuggingFace token for private models
+--openai_api_key KEY       # OpenAI API key
+```
 
-All output files include complete model configuration information, making it easy to reproduce results and track which model settings were used for each evaluation run.
+### Output & Debugging
+```bash
+--output_path, -o PATH     # Output directory or file
+--log_samples              # Log detailed sample info
+--verbose, -v              # Enable verbose logging
+```
+
+### Utility Commands
+```bash
+--preview_dataset          # Preview dataset without evaluation
+--list_files REPO          # List files in HF repository
+```
+
+### Advanced Options
+```bash
+--limit N                  # Limit number of samples
+--system_prompt TEXT       # Custom system prompt
+--tool_call_format TAGS    # start_tag,end_tag format
+
+# Text Customization (for multi-language support)
+--functions_header TEXT    # Header for functions section (default: "## Налични функции:")
+--user_query_header TEXT   # Header for user query section (default: "## Потребителска заявка:")
+--user_prefix TEXT         # Prefix for user messages (default: "Потребител:")
+--default_system_prompt TEXT  # Default system prompt text (default: Bulgarian)
+--function_system_prompt_template TEXT  # Jinja2 template for function system prompt
+```
+
+</details>
+
+## 🔍 Dataset Utilities
+
+```bash
+# Preview your dataset structure
+tucan --preview_dataset --samples my_dataset.json
+
+# Explore Tucan model files
+tucan --list_files s-emanuilov/Tucan-9B-v1.0
+
+# Use the official Tucan evaluation dataset
+tucan --model s-emanuilov/Tucan-9B-v1.0 \
+      --samples s-emanuilov/Tucan-BG-Eval-v1.0 \
+      --source_type hf_dataset
+```
+
+## 📊 Output
+
+<details>
+<summary><strong>📋 Detailed Output Format</strong> (Click to expand)</summary>
+
+Tucan generates comprehensive JSON reports optimized for function-calling evaluation:
+
+```json
+{
+  "model_info": {
+    "model_name": "s-emanuilov/Tucan-9B-v1.0",
+    "model_type": "huggingface",
+    "generation_params": {...}
+  },
+  "evaluation_summary": {
+    "total": 100,
+    "correct": 85,
+    "accuracy": 0.85,
+    "by_scenario_type": {...},
+    "error_distribution": {...}
+  },
+  "detailed_results": [...],
+  "metadata": {...}
+}
+```
+
+The evaluation automatically prints a summary to console:
+
+```
+📊 EVALUATION SUMMARY
+===============================================================================
+🎯 Overall Accuracy: 85.00% (85/100)
+
+📈 Accuracy by Scenario Type:
+function_call_required               90.00%     (45/50)
+irrelevant_question_with_functions   80.00%     (40/50)
+
+📉 Error Distribution:
+WRONG_PARAMETERS                     8     (53.33% of errors)
+NO_CALL_WHEN_EXPECTED               4     (26.67% of errors)
+UNEXPECTED_CALL                      3     (20.00% of errors)
+===============================================================================
+```
+
+</details>
+
+## 🌍 Multi-Language Support
+
+<details>
+<summary><strong>🌐 Language Customization Options</strong> (Click to expand)</summary>
+
+Tucan evaluation framework supports full customization of prompts and headers for different languages and use cases:
+
+**🎯 Key Features:**
+- **Configurable Headers**: Customize section headers for functions and user queries
+- **Multi-language Prompts**: Switch between Bulgarian, English, or any language
+- **Template System**: Use Jinja2 templates for complex prompt structures
+- **User Prefix Control**: Customize how user messages are prefixed
+- **Default Behavior**: Optimized for Bulgarian Tucan models out-of-the-box
+
+**📝 Default (Bulgarian)**
+```bash
+# Uses Bulgarian headers and prompts (default)
+tucan --model s-emanuilov/Tucan-9B-v1.0 --samples test.json
+```
+
+**🇺🇸 English Evaluation**
+```bash
+tucan --model your-model \
+      --functions_header "## Available Functions:" \
+      --user_query_header "## User Query:" \
+      --user_prefix "User:" \
+      --default_system_prompt "You are a helpful AI assistant that provides useful and accurate responses." \
+      --samples test.json
+```
+
+</details>
+
+## 🎭 Advanced Usage
+
+<details>
+<summary><strong>🔧 Advanced Configuration Examples</strong> (Click to expand)</summary>
+
+### Multi-Language Customization
+
+```bash
+# English evaluation with custom headers
+tucan --model s-emanuilov/Tucan-9B-v1.0 \
+      --samples test_dataset.json \
+      --functions_header "## Available Functions:" \
+      --user_query_header "## User Query:" \
+      --user_prefix "User:" \
+      --default_system_prompt "You are a helpful AI assistant that provides useful and accurate responses." \
+      --device cuda
+
+# Bulgarian function calling (default behavior)
+tucan --model s-emanuilov/Tucan-9B-v1.0 \
+      --samples bulgarian_function_calling_dataset.json \
+      --system_prompt "Ти си полезен AI assistent, който може да извиква функции..." \
+      --tool_call_format '```tool_call,```' \
+      --device cuda \
+      --verbose
+
+# Custom system prompt template for functions
+tucan --model s-emanuilov/Tucan-9B-v1.0 \
+      --function_system_prompt_template "You are an AI assistant with access to functions. Use {{ tool_call_start_tag }} and {{ tool_call_end_tag }} for function calls." \
+      --functions_header "🔧 Functions:" \
+      --user_query_header "❓ Query:" \
+      --samples test.json
+```
+
+### Language-Specific Evaluations
+
+```bash
+# Compare Bulgarian vs English prompting on the same model
+tucan --model s-emanuilov/Tucan-9B-v1.0 \
+      --samples test.json \
+      --output_path results/tucan_bulgarian.json
+
+tucan --model s-emanuilov/Tucan-9B-v1.0 \
+      --samples test.json \
+      --functions_header "## Available Functions:" \
+      --user_query_header "## User Query:" \
+      --user_prefix "User:" \
+      --default_system_prompt "You are a helpful AI assistant." \
+      --output_path results/tucan_english.json
+```
+
+### Hyperparameter Optimization for Tucan Models
+
+```bash
+# Test different generation parameters optimized for Tucan
+tucan --model s-emanuilov/Tucan-9B-v1.0 \
+      --gen_kwargs temperature=0.1,top_k=25,repetition_penalty=1.1 \
+      --samples test.json --output_path results/tucan_config1.json
+
+tucan --model s-emanuilov/Tucan-9B-v1.0 \
+      --gen_kwargs temperature=0.3,top_k=50,repetition_penalty=1.2 \
+      --samples test.json --output_path results/tucan_config2.json
+```
+
+</details>
+
+## 🔗 Links
+
+- 🦜 **[Tucan Model Collection](https://huggingface.co/collections/s-emanuilov/tucan-tool-using-and-function-calling-in-bulgarian-684546a02b297f30768993dd)** - All Tucan models and datasets
+- 📊 **[Tucan-BG-Eval Dataset](https://huggingface.co/datasets/s-emanuilov/Tucan-BG-Eval-v1.0)** - Official evaluation dataset
+- 📚 **[GitHub Repository](https://github.com/s-emanuilov/tucan)** - Source code and documentation
+
+## 🤝 Contributing
+
+Contributions welcome! This framework was designed for rigorous evaluation of function-calling capabilities in language models.
 
 ## 📄 License
 
-This project is licensed under the terms of the Apache 2.0 License.
+Apache License 2.0 - see [LICENSE](LICENSE) file.
+
+## 🙏 Acknowledgments
+
+Created for the Tucan model series. Inspired by [lm-evaluation-harness](https://github.com/EleutherAI/lm-evaluation-harness) for its excellent CLI design.

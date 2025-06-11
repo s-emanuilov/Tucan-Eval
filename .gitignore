@@ -195,3 +195,4 @@ cython_debug/
 combine.py
 .DS_Store
 venv/
+*.json

@@ -14,3 +14,6 @@ PyYAML>=6.0
 # HuggingFace datasets for loading evaluation data
 datasets>=2.14.0
 huggingface_hub>=0.16.0
+
+# OpenAI API support (optional)
+openai>=1.0.0
