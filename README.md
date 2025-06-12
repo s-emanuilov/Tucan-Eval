@@ -1,14 +1,12 @@
 # 🦜 Tucan: Function Calling Evaluation Framework
 
-**Tucan** is a comprehensive evaluation framework for assessing function-calling capabilities of language models, with optimized defaults for Bulgarian language models like BgGPT.
+**This is the official evaluation framework for [Tucan models](https://huggingface.co/collections/s-emanuilov/tucan-tool-using-and-function-calling-in-bulgarian-684546a02b297f30768993dd) 🇧🇬**
+
+This small Python package provides a **unified command-line interface** for evaluating language models on function-calling tasks, designed initially for the [Tucan series](https://huggingface.co/collections/s-emanuilov/tucan-tool-using-and-function-calling-in-bulgarian-684546a02b297f30768993dd) but adaptable for any other models.
 
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Python 3.8+](https://img.shields.io/badge/Python-3.8+-blue.svg)](https://www.python.org/downloads/)
 [![HuggingFace](https://img.shields.io/badge/🤗-Models-yellow.svg)](https://huggingface.co/collections/s-emanuilov/tucan-models-674b4d68e75bd49156b5ff2a)
-
-**The official evaluation framework for [Tucan models](https://huggingface.co/collections/s-emanuilov/tucan-tool-using-and-function-calling-in-bulgarian-684546a02b297f30768993dd) 🇧🇬**
-
-Tucan provides a **unified command-line interface** for evaluating language models on function-calling tasks, designed initially for the [Tucan series](https://huggingface.co/collections/s-emanuilov/tucan-tool-using-and-function-calling-in-bulgarian-684546a02b297f30768993dd) but adaptable for any model evaluation with optimized defaults for BgGPT models.
 
 **🎯 Single Command Evaluation** - No config files, no two-step processes, just pure CLI power!
 
@@ -16,7 +14,7 @@ Tucan provides a **unified command-line interface** for evaluating language mode
 
 ## 🦜 About Tucan Models
 
-**TUCAN (Tool-Using Capable Assistant Navigator)** is a series of open-source Bulgarian language models fine-tuned specifically for function calling and tool use. These models can interact with external tools, APIs, and databases, making them appropriate for building AI agents and Model Context Protocol (MCP) applications.
+**TUCAN (Tool-Using Capable Assistant Navigator)** is a series of open-source Bulgarian language models fine-tuned specifically for function calling and tool use. These models can interact with external tools, APIs, and databases, making them appropriate for building AI agents and [Model Context Protocol (MCP)](https://modelcontextprotocol.io/introduction) applications.
 
 📄 *Full methodology, dataset details, and evaluation results coming in the upcoming paper*
 
@@ -27,11 +25,13 @@ Tucan provides a **unified command-line interface** for evaluating language mode
 
 👉 **[View Full Model Collection](https://huggingface.co/collections/s-emanuilov/tucan-tool-using-and-function-calling-in-bulgarian-684546a02b297f30768993dd)**
 
+*Additionally, GGUF quantized versions and LoRA adapters for BgGPT models are available in the collection.*
+
 ---
 
 ## 🎯 Key Features
 
-- **🔥 Zero-Configuration Setup**: Optimized defaults for BgGPT/Gemma models - just specify the model name!
+- **🔥 Zero-Configuration Setup**: Optimized defaults for Tucan/BgGPT/Gemma models - just specify the model name!
 - **⚡ Efficient Evaluation**: Built-in support for quantization, batching, and memory optimization
 - **🌍 Multi-Language Support**: Specifically optimized for Bulgarian language models with English fallback
 - **📊 Comprehensive Analysis**: Detailed accuracy metrics, error analysis, and model comparisons
@@ -45,25 +45,24 @@ Tucan provides a **unified command-line interface** for evaluating language mode
 ### Installation
 
 ```bash
-pip install tucan-eval
-# OR from source
 git clone https://github.com/s-emanuilov/Tucan.git
 cd Tucan && pip install -e .
 ```
 
-### Evaluate BgGPT Models (Zero Configuration)
+### Evaluate Tucan or BgGPT Models (Zero Configuration)
 
 ```bash
-# Evaluate BgGPT model with optimized defaults - everything just works!
-tucan --model INSAIT-Institute/BgGPT-Gemma-2-2.6B-IT-v1.0 \
+# Evaluate Tucan-2.6B-v1.0
+tucan --model s-emanuilov/Tucan-2.6B-v1.0 \
       --samples s-emanuilov/Tucan-BG-Eval-v1.0 \
       --device cuda \
       --batch_size 4
 
-# Evaluate other model sizes
-tucan --model INSAIT-Institute/BgGPT-Gemma-2-9B-IT-v1.0 \
+# Evaluate BgGPT-Gemma-2-2.6B-IT-v1.0
+tucan --model INSAIT-Institute/BgGPT-Gemma-2-2.6B-IT-v1.0 \
+      --samples s-emanuilov/Tucan-BG-Eval-v1.0 \
       --device cuda \
-      --batch_size 2
+      --batch_size 4
 
 # Override defaults if needed
 tucan --model INSAIT-Institute/BgGPT-Gemma-2-2.6B-IT-v1.0,dtype=float16,load_in_4bit=false \
@@ -71,15 +70,10 @@ tucan --model INSAIT-Institute/BgGPT-Gemma-2-2.6B-IT-v1.0,dtype=float16,load_in_
       --device cuda
 ```
 
-### Evaluate Tucan Models
+### Evaluate OpenAI models
 
 ```bash
-# Evaluate Tucan models
-tucan --model s-emanuilov/Tucan-2.6B-v1.0 \
-      --samples s-emanuilov/Tucan-BG-Eval-v1.0 \
-      --device cuda
-
-# Compare with OpenAI models
+# Compare with OpenAI models (supported gpt-4.1-mini and gpt-4.1)
 tucan --model gpt-4.1-mini \
       --openai_api_key YOUR_API_KEY \
       --samples s-emanuilov/Tucan-BG-Eval-v1.0 
@@ -100,67 +94,6 @@ Tucan comes with **optimized defaults for BgGPT models**:
 | `eos_token_id` | `[1, 107]` | Proper EOS tokens for BgGPT/Gemma 2 |
 
 **No config files needed!** Everything is handled automatically based on the model name.
-
-## 📖 Command Examples
-
-<details>
-<summary><strong>🦜 BgGPT Model Examples</strong> (Click to expand)</summary>
-
-### BgGPT Models (Automatic Optimization)
-
-```bash
-# BgGPT 2.6B - Defaults are automatically optimized
-tucan --model INSAIT-Institute/BgGPT-Gemma-2-2.6B-IT-v1.0 \
-      --device cuda \
-      --batch_size 8
-
-# BgGPT 9B - All parameters auto-configured
-tucan --model INSAIT-Institute/BgGPT-Gemma-2-9B-IT-v1.0 \
-      --device cuda \
-      --batch_size 4
-
-# Override specific parameters when needed
-tucan --model INSAIT-Institute/BgGPT-Gemma-2-2.6B-IT-v1.0 \
-      --gen_kwargs temperature=0.2,top_k=50 \
-      --device cuda
-```
-
-### Tucan Models
-
-```bash
-# Tucan 2.6B - Compact and efficient
-tucan --model s-emanuilov/Tucan-2.6B-v1.0,dtype=bfloat16,attn_implementation=eager \
-      --device cuda \
-      --batch_size 8
-
-# Tucan 9B - Balanced performance
-tucan --model s-emanuilov/Tucan-9B-v1.0,dtype=bfloat16,attn_implementation=eager \
-      --device cuda \
-      --batch_size 4
-```
-
-</details>
-
-<details>
-<summary><strong>🔗 Other Model Examples</strong> (Click to expand)</summary>
-
-```bash
-# Local model
-tucan --model ./models/my-local-model --device cuda --batch_size 2
-
-# HuggingFace models with custom parameters
-tucan --model microsoft/DialoGPT-large,load_in_4bit=true,dtype=bfloat16 \
-      --gen_kwargs max_new_tokens=1024,temperature=0.7 \
-      --batch_size 8
-
-# OpenAI models for comparison
-tucan --model gpt-4 \
-      --openai_api_key YOUR_API_KEY \
-      --gen_kwargs max_new_tokens=512,temperature=0.1 \
-      --samples test_data.json
-```
-
-</details>
 
 ## 🔧 CLI Reference
 
@@ -401,12 +334,8 @@ tucan --model s-emanuilov/Tucan-9B-v1.0 \
 
 ## 🤝 Contributing
 
-Contributions welcome! This framework was designed for rigorous evaluation of function-calling capabilities in language models.
+Contributions welcome! This framework was designed for evaluation of function-calling capabilities in language models.
 
 ## 📄 License
 
 Apache License 2.0 - see [LICENSE](LICENSE) file.
-
-## 🙏 Acknowledgments
-
-Created for the Tucan model series. Inspired by [lm-evaluation-harness](https://github.com/EleutherAI/lm-evaluation-harness) for its excellent CLI design.
