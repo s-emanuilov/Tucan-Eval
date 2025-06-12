@@ -8,40 +8,44 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-def _parse_functions_from_dataset(samples: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+def _parse_functions_from_dataset(
+    samples: List[Dict[str, Any]],
+) -> List[Dict[str, Any]]:
     """
     Parse function strings from HuggingFace dataset samples into proper JSON objects.
-    
+
     Args:
         samples: List of samples from the dataset
-        
+
     Returns:
         List of samples with parsed function objects
     """
     processed_samples = []
     functions_converted = 0
-    
+
     for sample in samples:
         processed_sample = sample.copy()
-        
+
         # Check if functions field exists and is a string
-        if 'functions' in processed_sample and isinstance(processed_sample['functions'], str):
+        if "functions" in processed_sample and isinstance(
+            processed_sample["functions"], str
+        ):
             try:
                 # Parse the JSON string into proper objects
-                parsed_functions = json.loads(processed_sample['functions'])
-                processed_sample['functions'] = parsed_functions
+                parsed_functions = json.loads(processed_sample["functions"])
+                processed_sample["functions"] = parsed_functions
                 functions_converted += 1
-                logger.debug(f"Successfully parsed functions string to JSON objects")
+                logger.debug("Successfully parsed functions string to JSON objects")
             except json.JSONDecodeError as e:
                 logger.warning(f"Failed to parse functions JSON string: {e}")
                 # Keep the original string if parsing fails
                 pass
-        
+
         processed_samples.append(processed_sample)
-    
+
     if functions_converted > 0:
         print(f"🔄 Converted {functions_converted} function strings to JSON objects")
-    
+
     return processed_samples
 
 

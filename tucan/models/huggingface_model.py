@@ -1,8 +1,3 @@
-#!/usr/bin/env python3
-"""
-HuggingFace model implementation for the Tucan framework.
-"""
-
 import torch
 import gc
 import json

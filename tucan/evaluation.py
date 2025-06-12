@@ -1,8 +1,3 @@
-#!/usr/bin/env python3
-"""
-Evaluation module for the Tucan framework.
-"""
-
 import json
 from typing import Dict, List, Any, Optional
 from .evaluate import _parse_tool_call, _compare_parameters
@@ -88,7 +83,7 @@ class FunctionCallEvaluator:
             except (json.JSONDecodeError, ValueError):
                 # If it can't be parsed as JSON, it's a data format error
                 return "DATA_FORMAT_ERROR"
-        
+
         # Expected should be a dictionary
         if not isinstance(expected, dict):
             return "DATA_FORMAT_ERROR"

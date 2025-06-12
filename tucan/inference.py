@@ -48,14 +48,14 @@ def run_inference(config, samples, output_path, batch_size=1, verbose=False):
         generation_params = config.get("generation_params", {})
 
         # Handle EOS tokens - check if configured in generation_params first
-        if 'eos_token_id' in generation_params:
-            eos_token_ids = generation_params['eos_token_id']
+        if "eos_token_id" in generation_params:
+            eos_token_ids = generation_params["eos_token_id"]
             # Ensure it's a list
             if not isinstance(eos_token_ids, list):
                 eos_token_ids = [eos_token_ids]
-        elif 'stop_token_ids' in generation_params:
+        elif "stop_token_ids" in generation_params:
             # Alternative format for vLLM compatibility
-            eos_token_ids = generation_params['stop_token_ids']
+            eos_token_ids = generation_params["stop_token_ids"]
             if not isinstance(eos_token_ids, list):
                 eos_token_ids = [eos_token_ids]
         else:

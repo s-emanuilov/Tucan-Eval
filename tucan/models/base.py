@@ -1,8 +1,3 @@
-#!/usr/bin/env python3
-"""
-Base model interface for the Tucan framework.
-"""
-
 from abc import ABC, abstractmethod
 from typing import Dict, List, Any, Optional
 from datetime import datetime

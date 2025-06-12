@@ -197,3 +197,4 @@ combine.py
 venv/
 *.json
 *.log
+*.parquet

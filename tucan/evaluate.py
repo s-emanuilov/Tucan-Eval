@@ -33,7 +33,7 @@ def _parse_tool_call(response: str, start_tag: str, end_tag: str) -> Optional[Di
 
 
 def _compare_parameters(expected_params: Dict, actual_params: Dict) -> bool:
-    """Compares expected vs. actual parameters with case-insensitive string matching."""
+    """Compares expected vs. actual parameters with lenient type matching."""
     if not expected_params:
         expected_params = {}
     if not actual_params:
@@ -44,12 +44,165 @@ def _compare_parameters(expected_params: Dict, actual_params: Dict) -> bool:
 
     for key, expected_value in expected_params.items():
         actual_value = actual_params[key]
-        if isinstance(expected_value, str) and isinstance(actual_value, str):
-            if expected_value.strip().lower() != actual_value.strip().lower():
-                return False
-        elif expected_value != actual_value:
+        if not _values_are_equivalent(expected_value, actual_value):
             return False
     return True
+
+
+def _normalize_string_for_comparison(text: str) -> str:
+    """
+    Normalize a string for comparison by applying transliteration, case normalization,
+    and punctuation normalization. Handles common Cyrillic-Latin transliterations
+    and minor punctuation differences.
+    """
+    import re
+
+    # Common Cyrillic to Latin transliterations
+    cyrillic_to_latin = {
+        "А": "A",
+        "Б": "B",
+        "В": "V",
+        "Г": "G",
+        "Д": "D",
+        "Е": "E",
+        "Ж": "ZH",
+        "З": "Z",
+        "И": "I",
+        "Й": "Y",
+        "К": "K",
+        "Л": "L",
+        "М": "M",
+        "Н": "N",
+        "О": "O",
+        "П": "P",
+        "Р": "R",
+        "С": "S",
+        "Т": "T",
+        "У": "U",
+        "Ф": "F",
+        "Х": "H",
+        "Ц": "TS",
+        "Ч": "CH",
+        "Ш": "SH",
+        "Щ": "SHCH",
+        "Ъ": "",
+        "Ы": "Y",
+        "Ь": "",
+        "Э": "E",
+        "Ю": "YU",
+        "Я": "YA",
+        "а": "a",
+        "б": "b",
+        "в": "v",
+        "г": "g",
+        "д": "d",
+        "е": "e",
+        "ж": "zh",
+        "з": "z",
+        "и": "i",
+        "й": "y",
+        "к": "k",
+        "л": "l",
+        "м": "m",
+        "н": "n",
+        "о": "o",
+        "п": "p",
+        "р": "r",
+        "с": "s",
+        "т": "t",
+        "у": "u",
+        "ф": "f",
+        "х": "h",
+        "ц": "ts",
+        "ч": "ch",
+        "ш": "sh",
+        "щ": "shch",
+        "ъ": "",
+        "ы": "y",
+        "ь": "",
+        "э": "e",
+        "ю": "yu",
+        "я": "ya",
+    }
+
+    # Apply transliteration
+    normalized = "".join(cyrillic_to_latin.get(char, char) for char in text)
+
+    # Normalize punctuation:
+    # 1. Remove trailing punctuation (period, comma, exclamation, question mark, semicolon, colon)
+    normalized = re.sub(r"[.!?,:;]+$", "", normalized)
+
+    # 2. Normalize multiple consecutive spaces to single space
+    normalized = re.sub(r"\s+", " ", normalized)
+
+    # 3. Remove leading/trailing quotes and whitespace
+    normalized = normalized.strip().strip('"\'""„"').strip()
+
+    # Apply case normalization
+    return normalized.lower()
+
+
+def _values_are_equivalent(expected, actual) -> bool:
+    """
+    Compare two values with lenient type matching.
+    Handles string/number coercion, transliteration, and nested structures.
+    """
+    # Exact match (including type)
+    if expected == actual:
+        return True
+
+    # Handle None values
+    if expected is None or actual is None:
+        return expected == actual
+
+    # Handle string comparisons (case-insensitive + transliteration)
+    if isinstance(expected, str) and isinstance(actual, str):
+        # First try simple case-insensitive comparison
+        if expected.strip().lower() == actual.strip().lower():
+            return True
+
+        # Then try with transliteration normalization
+        normalized_expected = _normalize_string_for_comparison(expected)
+        normalized_actual = _normalize_string_for_comparison(actual)
+        return normalized_expected == normalized_actual
+
+    # Handle string-number coercion
+    if isinstance(expected, str) and isinstance(actual, (int, float)):
+        try:
+            # Try to convert expected string to number and compare
+            if "." in expected:
+                return float(expected) == actual
+            else:
+                return int(expected) == actual
+        except (ValueError, TypeError):
+            return False
+
+    if isinstance(actual, str) and isinstance(expected, (int, float)):
+        try:
+            # Try to convert actual string to number and compare
+            if "." in actual:
+                return float(actual) == expected
+            else:
+                return int(actual) == expected
+        except (ValueError, TypeError):
+            return False
+
+    # Handle list/array comparisons
+    if isinstance(expected, list) and isinstance(actual, list):
+        if len(expected) != len(actual):
+            return False
+        return all(_values_are_equivalent(e, a) for e, a in zip(expected, actual))
+
+    # Handle dict comparisons (recursive)
+    if isinstance(expected, dict) and isinstance(actual, dict):
+        if sorted(expected.keys()) != sorted(actual.keys()):
+            return False
+        return all(
+            _values_are_equivalent(expected[k], actual[k]) for k in expected.keys()
+        )
+
+    # For other types, require exact match
+    return False
 
 
 def run_evaluation(config, inference_results, output_path, verbose=False):

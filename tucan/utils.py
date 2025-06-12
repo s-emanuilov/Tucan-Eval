@@ -47,16 +47,6 @@ def log_prompt_and_response(sample_idx, user_message, functions, prompt, respons
     log_debug(f"SAMPLE {sample_idx + 1}")
     log_debug(f"{separator}")
 
-    log_debug(f"USER MESSAGE:\n{user_message}", "USER")
-
-    if functions:
-        log_debug(
-            f"FUNCTIONS:\n{json.dumps(functions, ensure_ascii=False, indent=2)}",
-            "FUNCTIONS",
-        )
-    else:
-        log_debug("FUNCTIONS: None", "FUNCTIONS")
-
     log_debug(f"COMPLETE PROMPT:\n{prompt}", "PROMPT")
 
     log_debug(f"MODEL RESPONSE:\n{response}", "RESPONSE")
@@ -108,7 +98,7 @@ def initialize_model(config):
         "trust_remote_code": True,
         "device_map": "auto" if device == "cuda" else None,
     }
-    
+
     # Add attention implementation if specified in config
     if config.get("attn_implementation"):
         model_kwargs["attn_implementation"] = config["attn_implementation"]
@@ -298,10 +288,12 @@ def get_model_info(config, batch_size=None):
     return model_info
 
 
-def log_system_prompt_details(system_prompt_content, functions_header, user_query_header):
+def log_system_prompt_details(
+    system_prompt_content, functions_header, user_query_header
+):
     """
     Logs system prompt configuration details in verbose mode.
-    
+
     Args:
         system_prompt_content: The system prompt content
         functions_header: Header text for functions

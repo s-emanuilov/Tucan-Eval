@@ -1,8 +1,3 @@
-#!/usr/bin/env python3
-"""
-TucanEvaluator: Main evaluation class for the Tucan framework
-"""
-
 import json
 import logging
 from pathlib import Path
@@ -93,7 +88,18 @@ class TucanEvaluator:
 
         # Set up logging
         if verbose:
-            logging.basicConfig(level=logging.DEBUG)
+            # Configure logging more selectively to avoid noisy HTTP debug messages
+            logging.basicConfig(level=logging.INFO)
+
+            # Enable debug logging only for tucan-specific modules
+            logging.getLogger("tucan").setLevel(logging.DEBUG)
+            logging.getLogger(__name__).setLevel(logging.DEBUG)
+
+            # Suppress verbose HTTP library logs while keeping error/warning levels
+            logging.getLogger("httpcore").setLevel(logging.WARNING)
+            logging.getLogger("httpx").setLevel(logging.WARNING)
+            logging.getLogger("urllib3").setLevel(logging.WARNING)
+            logging.getLogger("requests").setLevel(logging.WARNING)
         self.logger = logging.getLogger(__name__)
 
     def set_generation_params(self, **kwargs):

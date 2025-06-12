@@ -32,7 +32,7 @@ def parse_key_value_args(arg_string: str) -> dict:
             # Handle list values like [1,107]
             try:
                 result[key] = eval(value)  # Simple list parsing
-            except:
+            except (ValueError, SyntaxError, NameError):
                 result[key] = value
         else:
             result[key] = value
@@ -323,6 +323,7 @@ Examples:
     if args.verbose:
         # Import only when needed
         from .utils import clear_debug_log, log_debug
+
         clear_debug_log()
         log_debug("Starting Tucan evaluation in verbose mode")
         log_debug(f"Model: {model_name}")

@@ -1,8 +1,3 @@
-#!/usr/bin/env python3
-"""
-OpenAI model implementation for the Tucan framework.
-"""
-
 import json
 import time
 from typing import Dict, List, Any, Optional

@@ -1,8 +1,3 @@
-#!/usr/bin/env python3
-"""
-Model factory for the Tucan framework.
-"""
-
 from typing import Dict, Any, Optional
 from pathlib import Path
 
