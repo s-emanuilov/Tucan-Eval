@@ -196,3 +196,4 @@ combine.py
 .DS_Store
 venv/
 *.json
+*.log

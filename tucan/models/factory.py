@@ -61,7 +61,7 @@ class ModelFactory:
         model_kwargs.setdefault('load_in_4bit', True)  # Memory efficient
         
         # Set attention implementation for Gemma models (flash attention not supported)
-        if 'gemma' in model_name.lower() or 'bggpt' in model_name.lower():
+        if 'gemma' in model_name.lower() or 'bggpt' in model_name.lower() or 'tucan' in model_name.lower():
             model_kwargs.setdefault('attn_implementation', 'eager')
         
         if generation_params is None:
@@ -141,5 +141,5 @@ class ModelFactory:
         """Get a dictionary of supported model types and their descriptions."""
         return {
             'huggingface': 'HuggingFace transformers models (local or remote)',
-            'openai': 'OpenAI API models (GPT-3.5, GPT-4, etc.)',
+            'openai': 'OpenAI API models (GPT-4.1-mini, GPT-4.1, etc.)',
         } 
