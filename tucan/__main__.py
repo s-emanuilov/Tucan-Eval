@@ -14,7 +14,27 @@ def parse_key_value_args(arg_string: str) -> dict:
         return {}
 
     result = {}
-    pairs = arg_string.split(",")
+
+    # Custom split that respects brackets
+    pairs = []
+    current_pair = ""
+    bracket_depth = 0
+
+    for char in arg_string:
+        if char == "[":
+            bracket_depth += 1
+        elif char == "]":
+            bracket_depth -= 1
+        elif char == "," and bracket_depth == 0:
+            if current_pair.strip():
+                pairs.append(current_pair.strip())
+            current_pair = ""
+            continue
+        current_pair += char
+
+    # Add the last pair
+    if current_pair.strip():
+        pairs.append(current_pair.strip())
 
     for pair in pairs:
         if "=" not in pair:
