@@ -120,7 +120,7 @@ class ModelFactory:
         
         # Check for known OpenAI model names
         openai_models = {
-            'gpt-4.1-mini', 'gpt-4.1'
+            'gpt-4.1-mini', 'gpt-4.1', 'gpt-4o-mini', 'gpt-4o'
         }
         
         return model_name in openai_models
