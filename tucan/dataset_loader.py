@@ -35,7 +35,6 @@ def _parse_functions_from_dataset(
                 parsed_functions = json.loads(processed_sample["functions"])
                 processed_sample["functions"] = parsed_functions
                 functions_converted += 1
-                logger.debug("Successfully parsed functions string to JSON objects")
             except json.JSONDecodeError as e:
                 logger.warning(f"Failed to parse functions JSON string: {e}")
                 # Keep the original string if parsing fails
