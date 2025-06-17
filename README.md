@@ -45,8 +45,8 @@ This small Python package provides a **unified command-line interface** for eval
 ### Installation
 
 ```bash
-git clone https://github.com/s-emanuilov/Tucan.git
-cd Tucan && pip install -e .
+git clone https://github.com/s-emanuilov/Tucan-Eval.git
+cd Tucan-Eval && pip install -e .
 ```
 
 ### Evaluate Tucan or BgGPT Models (Zero Configuration)
