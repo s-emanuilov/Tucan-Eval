@@ -1,12 +1,12 @@
 # 🦜 Tucan: Function Calling Evaluation Framework
 
-**This is the official evaluation framework for [Tucan models](https://huggingface.co/collections/s-emanuilov/tucan-tool-using-and-function-calling-in-bulgarian-684546a02b297f30768993dd) 🇧🇬**
+**This is the official evaluation framework for [Tucan models](https://huggingface.co/collections/llm-bg/tucan-6855825dbb0811b0e9672607) 🇧🇬**
 
-This small Python package provides a **unified command-line interface** for evaluating language models on function-calling tasks, designed initially for the [Tucan series](https://huggingface.co/collections/s-emanuilov/tucan-tool-using-and-function-calling-in-bulgarian-684546a02b297f30768993dd) but adaptable for any other models.
+This small Python package provides a **unified command-line interface** for evaluating language models on function-calling tasks, designed initially for the [Tucan series](https://huggingface.co/collections/llm-bg/tucan-6855825dbb0811b0e9672607) but adaptable for any other models.
 
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Python 3.8+](https://img.shields.io/badge/Python-3.8+-blue.svg)](https://www.python.org/downloads/)
-[![HuggingFace](https://img.shields.io/badge/🤗-Models-yellow.svg)](https://huggingface.co/collections/s-emanuilov/tucan-models-674b4d68e75bd49156b5ff2a)
+[![HuggingFace](https://img.shields.io/badge/🤗-Models-yellow.svg)](https://huggingface.co/collections/llm-bg/tucan-6855825dbb0811b0e9672607)
 
 **🎯 Single Command Evaluation** - No config files, no two-step processes, just pure CLI power!
 
@@ -19,11 +19,11 @@ This small Python package provides a **unified command-line interface** for eval
 📄 *Full methodology, dataset details, and evaluation results coming in the upcoming paper*
 
 **Available Models:**
-- 🔹 [Tucan-2.6B-v1.0](https://huggingface.co/s-emanuilov/Tucan-2.6B-v1.0) - Compact model for efficient deployment
-- 🔹 [Tucan-9B-v1.0](https://huggingface.co/s-emanuilov/Tucan-9B-v1.0) - Balanced performance and efficiency  
-- 🔹 [Tucan-27B-v1.0](https://huggingface.co/s-emanuilov/Tucan-27B-v1.0) - Maximum capability model
+- 🔹 [Tucan-2.6B-v1.0](https://huggingface.co/llm-bg/Tucan-2.6B-v1.0) - Compact model for efficient deployment
+- 🔹 [Tucan-9B-v1.0](https://huggingface.co/llm-bg/Tucan-9B-v1.0) - Balanced performance and efficiency  
+- 🔹 [Tucan-27B-v1.0](https://huggingface.co/llm-bg/Tucan-27B-v1.0) - Maximum capability model
 
-👉 **[View Full Model Collection](https://huggingface.co/collections/s-emanuilov/tucan-tool-using-and-function-calling-in-bulgarian-684546a02b297f30768993dd)**
+👉 **[View Full Model Collection](https://huggingface.co/collections/llm-bg/tucan-6855825dbb0811b0e9672607)**
 
 *Additionally, GGUF quantized versions and LoRA adapters for BgGPT models are available in the collection.*
 
@@ -45,7 +45,7 @@ This small Python package provides a **unified command-line interface** for eval
 ### Installation
 
 ```bash
-git clone https://github.com/s-emanuilov/Tucan-Eval.git
+git clone https://github.com/llm-bg/Tucan-Eval.git
 cd Tucan-Eval && pip install -e .
 ```
 
@@ -53,14 +53,14 @@ cd Tucan-Eval && pip install -e .
 
 ```bash
 # Evaluate Tucan-2.6B-v1.0
-tucan --model s-emanuilov/Tucan-2.6B-v1.0 \
-      --samples s-emanuilov/Tucan-BG-Eval-v1.0 \
+tucan --model llm-bg/Tucan-2.6B-v1.0 \
+      --samples llm-bg/Tucan-BG-Eval-v1.0 \
       --device cuda \
       --batch_size 4
 
 # Evaluate BgGPT-Gemma-2-2.6B-IT-v1.0
 tucan --model INSAIT-Institute/BgGPT-Gemma-2-2.6B-IT-v1.0 \
-      --samples s-emanuilov/Tucan-BG-Eval-v1.0 \
+      --samples llm-bg/Tucan-BG-Eval-v1.0 \
       --device cuda \
       --batch_size 4
 
@@ -76,7 +76,7 @@ tucan --model INSAIT-Institute/BgGPT-Gemma-2-2.6B-IT-v1.0,dtype=float16,load_in_
 # Compare with OpenAI models (supported gpt-4.1-mini and gpt-4.1)
 tucan --model gpt-4.1-mini \
       --openai_api_key YOUR_API_KEY \
-      --samples s-emanuilov/Tucan-BG-Eval-v1.0 
+      --samples llm-bg/Tucan-BG-Eval-v1.0 
 ```
 
 ## 🔧 Built-in Optimizations
@@ -179,7 +179,7 @@ tucan --list_files INSAIT-Institute/BgGPT-Gemma-2-2.6B-IT-v1.0
 
 # Use the official Tucan evaluation dataset
 tucan --model INSAIT-Institute/BgGPT-Gemma-2-2.6B-IT-v1.0 \
-      --samples s-emanuilov/Tucan-BG-Eval-v1.0 \
+      --samples llm-bg/Tucan-BG-Eval-v1.0 \
       --source_type hf_dataset
 ```
 
@@ -193,7 +193,7 @@ Tucan generates comprehensive JSON reports optimized for function-calling evalua
 ```json
 {
   "model_info": {
-    "model_name": "s-emanuilov/Tucan-9B-v1.0",
+    "model_name": "llm-bg/Tucan-9B-v1.0",
     "model_type": "huggingface",
     "generation_params": {...}
   },
@@ -246,7 +246,7 @@ Tucan evaluation framework supports full customization of prompts and headers fo
 **📝 Default (Bulgarian)**
 ```bash
 # Uses Bulgarian headers and prompts (default)
-tucan --model s-emanuilov/Tucan-9B-v1.0 --samples test.json
+tucan --model llm-bg/Tucan-9B-v1.0 --samples test.json
 ```
 
 **🇺🇸 English Evaluation**
@@ -270,7 +270,7 @@ tucan --model your-model \
 
 ```bash
 # English evaluation with custom headers
-tucan --model s-emanuilov/Tucan-9B-v1.0 \
+tucan --model llm-bg/Tucan-9B-v1.0 \
       --samples test_dataset.json \
       --functions_header "## Available Functions:" \
       --user_query_header "## User Query:" \
@@ -279,7 +279,7 @@ tucan --model s-emanuilov/Tucan-9B-v1.0 \
       --device cuda
 
 # Bulgarian function calling (default behavior)
-tucan --model s-emanuilov/Tucan-9B-v1.0 \
+tucan --model llm-bg/Tucan-9B-v1.0 \
       --samples bulgarian_function_calling_dataset.json \
       --system_prompt "Ти си полезен AI assistent, който може да извиква функции..." \
       --tool_call_format '```tool_call,```' \
@@ -287,7 +287,7 @@ tucan --model s-emanuilov/Tucan-9B-v1.0 \
       --verbose
 
 # Custom system prompt template for functions
-tucan --model s-emanuilov/Tucan-9B-v1.0 \
+tucan --model llm-bg/Tucan-9B-v1.0 \
       --function_system_prompt_template "You are an AI assistant with access to functions. Use {{ tool_call_start_tag }} and {{ tool_call_end_tag }} for function calls." \
       --functions_header "🔧 Functions:" \
       --user_query_header "❓ Query:" \
@@ -298,11 +298,11 @@ tucan --model s-emanuilov/Tucan-9B-v1.0 \
 
 ```bash
 # Compare Bulgarian vs English prompting on the same model
-tucan --model s-emanuilov/Tucan-9B-v1.0 \
+tucan --model llm-bg/Tucan-9B-v1.0 \
       --samples test.json \
       --output_path results/tucan_bulgarian.json
 
-tucan --model s-emanuilov/Tucan-9B-v1.0 \
+tucan --model llm-bg/Tucan-9B-v1.0 \
       --samples test.json \
       --functions_header "## Available Functions:" \
       --user_query_header "## User Query:" \
@@ -315,11 +315,11 @@ tucan --model s-emanuilov/Tucan-9B-v1.0 \
 
 ```bash
 # Test different generation parameters optimized for Tucan
-tucan --model s-emanuilov/Tucan-9B-v1.0 \
+tucan --model llm-bg/Tucan-9B-v1.0 \
       --gen_kwargs temperature=0.1,top_k=25,repetition_penalty=1.1 \
       --samples test.json --output_path results/tucan_config1.json
 
-tucan --model s-emanuilov/Tucan-9B-v1.0 \
+tucan --model llm-bg/Tucan-9B-v1.0 \
       --gen_kwargs temperature=0.3,top_k=50,repetition_penalty=1.2 \
       --samples test.json --output_path results/tucan_config2.json
 ```
@@ -328,9 +328,9 @@ tucan --model s-emanuilov/Tucan-9B-v1.0 \
 
 ## 🔗 Links
 
-- 🦜 **[Tucan Model Collection](https://huggingface.co/collections/s-emanuilov/tucan-tool-using-and-function-calling-in-bulgarian-684546a02b297f30768993dd)** - All Tucan models and datasets
-- 📊 **[Tucan-BG-Eval Dataset](https://huggingface.co/datasets/s-emanuilov/Tucan-BG-Eval-v1.0)** - Official evaluation dataset
-- 📚 **[GitHub Repository](https://github.com/s-emanuilov/tucan)** - Source code and documentation
+- 🦜 **[Tucan Model Collection](https://huggingface.co/collections/llm-bg/tucan-6855825dbb0811b0e9672607)** - All Tucan models and datasets
+- 📊 **[Tucan-BG-Eval Dataset](https://huggingface.co/datasets/llm-bg/Tucan-BG-Eval-v1.0)** - Official evaluation dataset
+- 📚 **[GitHub Repository](https://github.com/llm-bg/tucan)** - Source code and documentation
 
 ## 🤝 Contributing
 
